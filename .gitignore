@@ -1,0 +1,7 @@
+# Folders
+__pycache__
+venv
+
+# Files that should not be considered part of the project
+instructions.txt
+notes.txt

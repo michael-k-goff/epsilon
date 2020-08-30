@@ -1,0 +1,16 @@
+.tile_row {
+    display: flex;
+}
+
+.tile {
+    width: 50px;
+    height: 50px;
+}
+
+.floor {
+    background-color: #663333;
+}
+
+.wall {
+    background-color: #AAAAAA;
+}

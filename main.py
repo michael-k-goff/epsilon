@@ -13,4 +13,6 @@ def hello_world():
 
 @app.route('/mapgen', methods=['POST'])
 def mapgen():
-    return maze.build_maze()
+    req_data = request.get_json()
+
+    return maze.build_maze(req_data["x"],req_data["y"])

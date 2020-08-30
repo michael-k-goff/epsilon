@@ -1,6 +1,27 @@
-fetch("/mapgen", {method:"post"})
+generate_map = () => {
+    // Clear out the old tiles
+    let tiles = document.getElementById("map");
+    while (tiles.firstChild) {
+        tiles.removeChild(tiles.firstChild);
+    }
+
+    // Build and fire off the POST request
+    let x = document.getElementById('x').value;
+    let y = document.getElementById('y').value;
+    fetch(
+        "/mapgen", {
+            method:"post",
+            body: JSON.stringify({"x":x, "y":y}),
+            cache: "no-cache",
+            headers: new Headers({
+                "content-type": "application/json"
+            })
+        }
+    )
     .then(response => response.json())
     .then(response => {
+
+        // Build the map in the map div.
         let tiles = document.getElementById("map");
         for (let i=0; i<response.tiles.length; i++) {
             let tile_row = document.createElement('div');
@@ -13,3 +34,4 @@ fetch("/mapgen", {method:"post"})
             tiles.appendChild(tile_row);
         }
     })
+}

@@ -1,11 +1,22 @@
 import random
 
+
 # Base size of maze. Returned size is expanded to 2m-1 rows and 2n-1 columns
 # To avoid some trivial base cases, assume m >= 2 and n >= 2
-m = 10
-n = 10
 
-def build_maze():
+def build_maze(m, n):
+    # Validation of m and n should occur before form submission, but some is here too.
+    if not m.isnumeric():
+        m = 5
+    else:
+        m = int(m)
+        m = max(2,min(50,m))
+    if not n.isnumeric():
+        n = 5
+    else:
+        n = int(n)
+        n = max(2,min(50,n))
+
     # Initial set of cells. Initially only (0,0) is added
     # 0 means not processed yet, 1 means in the queue, 2 means added
     cells = [

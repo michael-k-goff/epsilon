@@ -6,13 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">    
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="static/style.css">
-    <script src="static/buildmap.js"></script>
-    <title>Index</title>
+    <script type="text/javascript" src="static/buildmap.js"></script>
+    <title>Project Epsilon</title>
 </head>
 
 <body>
     <h1 style="color: blue">Project Epsilon</h1>
-    <p>A map:</p>
+
+    <form>
+        Rows:
+        <input type="text" id="x" name="x">
+        <br>
+        Columns:
+        <input type="text" id="y" name="y">
+        <br>
+        <button type="button" onclick="generate_map()">Generate Map</button>
+    </form>
+
     <div id="map">
 
     </div>

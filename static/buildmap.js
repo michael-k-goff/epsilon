@@ -1,3 +1,5 @@
+map_data = {}
+
 generate_map = () => {
     // Clear out the old tiles
     let tiles = document.getElementById("map");
@@ -23,6 +25,7 @@ generate_map = () => {
 
         // Build the map in the map div.
         let tiles = document.getElementById("map");
+        map_data.tiles = response.tiles;
         for (let i=0; i<response.tiles.length; i++) {
             let tile_row = document.createElement('div');
             tile_row.setAttribute('class', 'tile_row');
@@ -34,4 +37,18 @@ generate_map = () => {
             tiles.appendChild(tile_row);
         }
     })
+}
+
+// Based on code at https://stackoverflow.com/questions/3665115/how-to-create-a-file-in-memory-for-user-to-download-but-not-through-server
+map_download = () => {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(map_data)));
+    element.setAttribute('download', "map_data.txt");
+  
+    element.style.display = 'none';
+    document.body.appendChild(element);
+  
+    element.click();
+  
+    document.body.removeChild(element);
 }

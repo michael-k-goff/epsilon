@@ -14,20 +14,26 @@
     <h1 style="color: blue">Project Epsilon</h1>
 
     <form>
-        Rows:
-        <input type="text" id="x" name="x">
-        <br>
-        Columns:
-        <input type="text" id="y" name="y">
-        <br>
-        <button type="button" onclick="generate_map()">Generate Map</button>
+        <div class="input-element">
+            <div class="input-field">
+                Rows:
+            </div>
+            <input class="numeric-input" type="text" value="5" id="x" name="x">
+        </div>
+        <div class="input-element">
+            <div class="input-field">
+                Columns:
+            </div>
+            <input class="numeric-input" type="text" value="5" id="y" name="y">
+        </div>
+        <button type="button" class="submit-button" onclick="generate_map()">Generate Map</button>
     </form>
 
     <div id="map">
 
     </div>
 
-    <button onclick="map_download()">Download</button>
+    <button  class="submit-button" onclick="map_download()">Download</button>
 </body>
 
 </html>

@@ -5,6 +5,7 @@
 .tile {
     width: 50px;
     height: 50px;
+    flex: none;
 }
 
 .floor {
@@ -13,4 +14,40 @@
 
 .wall {
     background-color: #AAAAAA;
+}
+
+html {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.input-field {
+    width: 100px;
+    padding: 20px 0;
+    font-size:20px;
+}
+
+.input-element {
+    display: flex;
+}
+
+.numeric-input {
+    width: 100px;
+    padding: 12px 20px;
+    margin: 8px 0;
+    box-sizing: border-box;
+    border: 2px solid;
+    border-radius: 4px;
+    font-size: 20px;
+}
+
+.submit-button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 16px 32px;
+    text-decoration: none;
+    margin: 4px 2px;
+    cursor: pointer;
+    width: 20%;
+    font-size:20px;
 }

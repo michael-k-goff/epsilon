@@ -1,6 +1,10 @@
 map_data = {}
 
 generate_map = () => {
+    // Validate input
+    if (!validateForm()) {
+        return;
+    }
     // Clear out the old tiles
     let tiles = document.getElementById("map");
     while (tiles.firstChild) {
@@ -51,4 +55,19 @@ map_download = () => {
     element.click();
   
     document.body.removeChild(element);
+}
+
+validateForm = () => {
+    let x = document.getElementById('x').value;
+    let y = document.getElementById('y').value;
+    console.log(y);
+    if (isNaN(x) || isNaN(y)) {
+        alert("Numbers are required for Rows and Columns");
+        return false;
+    }
+    if (parseInt(x) < 2 || parseInt(x)>50 || parseInt(y) < 2 || parseInt(y) > 50) {
+        alert("Must have between 2 and 50 (inclusive) rows and columns");
+        return false;
+    }
+    return true;
 }

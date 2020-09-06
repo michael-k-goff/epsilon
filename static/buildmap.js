@@ -1,34 +1,47 @@
 map_data = {}
 
-generate_map = () => {
+generate_map = (do_save) => {
     // Validate input
     if (!validateForm()) {
         return;
     }
-    // Clear out the old tiles
-    let tiles = document.getElementById("map");
-    while (tiles.firstChild) {
-        tiles.removeChild(tiles.firstChild);
+
+    let x = document.getElementById('x').value;
+    let y = document.getElementById('y').value;
+    let room_size = document.getElementById('room_size').value;
+    
+    let request_json = {
+        method:"post",
+        body: JSON.stringify({
+            "x":x,
+            "y":y,
+            "do_save":do_save,
+            "room_size":room_size
+        }),
+        cache: "no-cache",
+        headers: new Headers({
+            "content-type": "application/json"
+        })
+    }
+
+    if (do_save) {
+        fetch("/mapgen", request_json)
+        return;
     }
 
     // Build and fire off the POST request
-    let x = document.getElementById('x').value;
-    let y = document.getElementById('y').value;
     fetch(
-        "/mapgen", {
-            method:"post",
-            body: JSON.stringify({"x":x, "y":y}),
-            cache: "no-cache",
-            headers: new Headers({
-                "content-type": "application/json"
-            })
-        }
+        "/mapgen", request_json
     )
     .then(response => response.json())
     .then(response => {
+        // Clear out the old tiles
+        let tiles = document.getElementById("map");
+        while (tiles.firstChild) {
+            tiles.removeChild(tiles.firstChild);
+        }
 
         // Build the map in the map div.
-        let tiles = document.getElementById("map");
         map_data.tiles = response.tiles;
         for (let i=0; i<response.tiles.length; i++) {
             let tile_row = document.createElement('div');
@@ -60,7 +73,6 @@ map_download = () => {
 validateForm = () => {
     let x = document.getElementById('x').value;
     let y = document.getElementById('y').value;
-    console.log(y);
     if (isNaN(x) || isNaN(y)) {
         alert("Numbers are required for Rows and Columns");
         return false;

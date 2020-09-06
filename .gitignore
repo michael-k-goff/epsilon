@@ -1,6 +1,8 @@
 # Folders
 __pycache__
 venv
+saved_maps
+instance
 
 # Files that should not be considered part of the project
 instructions.txt

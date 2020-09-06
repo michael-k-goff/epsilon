@@ -1,11 +1,11 @@
 import random
+import os
 
-
-# Base size of maze. Returned size is expanded to 2m-1 rows and 2n-1 columns
-# To avoid some trivial base cases, assume m >= 2 and n >= 2
-
-def build_maze(m, n):
+def validate_input(req_data):
+    m = req_data["x"]
+    n = req_data["y"]
     # Validation of m and n should occur before form submission, but some is here too.
+    # To avoid some trivial base cases, assume m >= 2 and n >= 2
     if not m.isnumeric():
         m = 5
     else:
@@ -16,6 +16,10 @@ def build_maze(m, n):
     else:
         n = int(n)
         n = max(2,min(50,n))
+    return m, n, req_data["do_save"], int(req_data["room_size"])
+
+def build_maze(req_data, app):
+    m, n, do_save, room_size = validate_input(req_data)
 
     # Initial set of cells. Initially only (0,0) is added
     # 0 means not processed yet, 1 means in the queue, 2 means added
@@ -31,11 +35,14 @@ def build_maze(m, n):
 
      # Initialize the full maze
     maze = [
-        ['wall' for j in range(2*n-1)]
-    for i in range(2*m-1)]
+        ['wall' for j in range((room_size+1)*n-1)]
+    for i in range((room_size+1)*m-1)]
+
     for i in range(m):
         for j in range(n):
-            maze[2*i][2*j] = 'floor'
+            for ii in range(room_size):
+                for jj in range(room_size):
+                    maze[(room_size+1)*i+ii][(room_size+1)*j+jj] = 'floor'
 
     for i in range(m*n-1):
         # Pick a cell to open next
@@ -77,12 +84,25 @@ def build_maze(m, n):
         py = prev_neighbors[prev_neighbor][0]
         px = prev_neighbors[prev_neighbor][1]
         if (px == x+1):
-            maze[2*y][2*x+1] = 'floor'
+            for ii in range(room_size):
+                maze[(room_size+1)*y+ii][(room_size+1)*x+room_size] = 'floor'
         if (px == x-1):
-            maze[2*y][2*x-1] = 'floor'
+            for ii in range(room_size):
+                maze[(room_size+1)*y+ii][(room_size+1)*x-1] = 'floor'
         if (py == y+1):
-            maze[2*y+1][2*x] = 'floor'
+            for ii in range(room_size):
+                maze[(room_size+1)*y+room_size][(room_size+1)*x+ii] = 'floor'
         if (py == y-1):
-            maze[2*y-1][2*x] = 'floor'
+            for ii in range(room_size):
+                maze[(room_size+1)*y-1][(room_size+1)*x+ii] = 'floor'
+    result = {"tiles":maze}
 
-    return {"tiles":maze}
+    if (do_save):
+        path = app.instance_path+"/saved_maps"
+        map_filename = "map"+str(len(os.listdir(path)))+".json"
+        print(map_filename)
+
+        file1 = open(path+"/"+map_filename, "w")
+        file1.write(str(result))
+        file1.close()
+    return result

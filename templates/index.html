@@ -26,7 +26,19 @@
             </div>
             <input class="numeric-input" type="text" value="5" id="y" name="y">
         </div>
-        <button type="button" class="submit-button" onclick="generate_map()">Generate Map</button>
+        <div class="input-element">
+            <div class="input-field">
+                Room Size:
+            </div>
+            <select class="box" id="room_size" name="room_szie">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+            </select>
+        </div>
+        <button type="button" class="submit-button" onclick="generate_map(0)">Generate Map</button>
+        <button type="button" class="submit-button" onclick="generate_map(1)">Save Map</button>
     </form>
 
     <div id="map">

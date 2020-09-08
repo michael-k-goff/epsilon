@@ -30,11 +30,21 @@
             <div class="input-field">
                 Room Size:
             </div>
-            <select class="box" id="room_size" name="room_szie">
+            <select class="box" id="room_size" name="room_size">
                 <option value="1">1</option>
                 <option value="2">2</option>
                 <option value="3">3</option>
                 <option value="4">4</option>
+            </select>
+        </div>
+        <div class="input-element">
+            <div class="input-field">
+                Corridors:
+            </div>
+            <select class="box-text" id="corridor_preference" name="corridor_preference">
+                <option value="none">No Preference</option>
+                <option value="long">Prefer Long</option>
+                <option value="short">Prefer Short</option>
             </select>
         </div>
         <button type="button" class="submit-button" onclick="generate_map(0)">Generate Map</button>

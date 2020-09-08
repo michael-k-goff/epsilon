@@ -9,6 +9,7 @@ generate_map = (do_save) => {
     let x = document.getElementById('x').value;
     let y = document.getElementById('y').value;
     let room_size = document.getElementById('room_size').value;
+    let corridor_preference = document.getElementById('corridor_preference').value;
     
     let request_json = {
         method:"post",
@@ -16,7 +17,8 @@ generate_map = (do_save) => {
             "x":x,
             "y":y,
             "do_save":do_save,
-            "room_size":room_size
+            "room_size":room_size,
+            "corridor_preference":corridor_preference
         }),
         cache: "no-cache",
         headers: new Headers({

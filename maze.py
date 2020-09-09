@@ -1,6 +1,5 @@
-# Revisions planned next time I work on this:
-
-# When an edge is allocated, allocate all other edges as need be.
+# WARNING: There is a bug as follows:
+# When including a new edge, see if other edges that can be added should have their class changed
 
 import random
 import os
@@ -150,10 +149,10 @@ class PartialGrid(Grid):
     def assign_edge(self, edge_num):
         # Figure out which endpoint is the new one.
         endpoints = [self.edges[edge_num].start, self.edges[edge_num].end]
-        new_node = endpoints[1]
+        old_node, new_node = endpoints[0], endpoints[1]
         for i in range(len(self.neighbors[endpoints[1]])):
             if self.neighbors[endpoints[1]][i].status == "Included":
-                new_node = endpoints[0]
+                new_node, old_node = endpoints[0], endpoints[1]
         # Include the new edge
         self.update_class(edge_num, "Included")
         # Assign new classes to edges adjacent to the new node
@@ -163,6 +162,12 @@ class PartialGrid(Grid):
                 self.update_class(e.index, "Excluded")
             if self.neighbors[new_node][i].status == "Unavailable":
                 self.update_class(e.index, self.get_edge_class(e.index))
+        # Update classes to edges adjacent to the old node
+        #for i in range(len(self.neighbors[old_node])):
+            #e = self.neighbors[old_node][i]
+            #if e.status not in ["Included","Excluded","Unavailable"]:
+                # pass
+                # self.update_class(e.index, self.get_edge_class(e.index))
     
     def display_status(self):
         for key in weight_classes[self.corridor_preference]:

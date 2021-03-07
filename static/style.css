@@ -16,12 +16,20 @@
     background-color: #AAAAAA;
 }
 
+.stairs_down {
+    background-color: #222222;
+}
+
+.stairs_up {
+    background-color: #DDDDDD;
+}
+
 html {
     font-family: Arial, Helvetica, sans-serif;
 }
 
 .input-field {
-    width: 120px;
+    width: 200px;
     padding: 20px 0;
     font-size:20px;
 }
@@ -50,6 +58,7 @@ html {
     cursor: pointer;
     width: 20%;
     font-size:20px;
+    border-radius: 5px;
 }
 
 .box {
@@ -72,4 +81,16 @@ html {
     border-radius: 4px;
     padding: 12px 20px;
     margin: 8px 0;
+}
+
+.tile > p {
+    text-align: center;
+    position: relative;
+    top: -50%;
+    -webkit-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+
+    font-size:30px;
+    font-weight:bold;
 }

@@ -1,5 +1,27 @@
 map_data = {}
 
+make_map = () => {
+    // Clear out the old tiles
+    let tiles = document.getElementById("map");
+    while (tiles.firstChild) {
+        tiles.removeChild(tiles.firstChild);
+    }
+
+    for (let i=0; i<map_data.tiles[map_data.floor].length; i++) {
+        let tile_row = document.createElement('div');
+        tile_row.setAttribute('class', 'tile_row');
+        for (let j=0; j<map_data.tiles[map_data.floor][i].length; j++) {
+            let tile = document.createElement('div');
+            if (i === map_data.x && j === map_data.y) {
+                tile.innerHTML = "<p>?</p>";
+            }
+            tile.setAttribute('class', 'tile '+map_data.tiles[map_data.floor][i][j]);
+            tile_row.appendChild(tile);
+        }
+        tiles.appendChild(tile_row);
+    }
+}
+
 generate_map = (do_save) => {
     // Validate input
     if (!validateForm()) {
@@ -8,6 +30,7 @@ generate_map = (do_save) => {
 
     let x = document.getElementById('x').value;
     let y = document.getElementById('y').value;
+    let z = document.getElementById('z').value;
     let room_size = document.getElementById('room_size').value;
     let corridor_preference = document.getElementById('corridor_preference').value;
     
@@ -16,6 +39,7 @@ generate_map = (do_save) => {
         body: JSON.stringify({
             "x":x,
             "y":y,
+            "z":z,
             "do_save":do_save,
             "room_size":room_size,
             "corridor_preference":corridor_preference
@@ -45,15 +69,13 @@ generate_map = (do_save) => {
 
         // Build the map in the map div.
         map_data.tiles = response.tiles;
-        for (let i=0; i<response.tiles.length; i++) {
-            let tile_row = document.createElement('div');
-            tile_row.setAttribute('class', 'tile_row');
-            for (let j=0; j<response.tiles[i].length; j++) {
-                let tile = document.createElement('div');
-                tile.setAttribute('class', 'tile '+response.tiles[i][j]);
-                tile_row.appendChild(tile);
-            }
-            tiles.appendChild(tile_row);
+        map_data.x = response.start_x;
+        map_data.y = response.start_y;
+        map_data.floor = response.floor;
+        map_data.num_generations = "num_generations" in map_data ? map_data.num_generations+1 : 1;
+        make_map();
+        if (map_data.num_generations == 1) {
+            add_navigation();
         }
     })
 }
@@ -75,12 +97,22 @@ map_download = () => {
 validateForm = () => {
     let x = document.getElementById('x').value;
     let y = document.getElementById('y').value;
-    if (isNaN(x) || isNaN(y)) {
-        alert("Numbers are required for Rows and Columns");
+    let z = document.getElementById('z').value;
+    let room_size = parseInt(document.getElementById('room_size').value);
+    if (isNaN(x) || isNaN(y) || isNaN(z)) {
+        alert("Numbers are required for Rows, Columns, and Number of Floors.");
         return false;
     }
     if (parseInt(x) < 2 || parseInt(x)>50 || parseInt(y) < 2 || parseInt(y) > 50) {
-        alert("Must have between 2 and 50 (inclusive) rows and columns");
+        alert("Must have between 2 and 50 (inclusive) rows and columns.");
+        return false;
+    }
+    if (parseInt(z) < 1 || parseInt(z)>50) {
+        alert("Must have between 1 and 50 (inclusive) floors.");
+        return false;
+    }
+    if (parseInt(z) > 1 && room_size === 1) {
+        alert("If there are multiple floors, the room size must be at least 2.");
         return false;
     }
     return true;

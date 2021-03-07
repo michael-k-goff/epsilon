@@ -183,6 +183,7 @@ class PartialGrid(Grid):
 def validate_input(req_data):
     m = req_data["x"]
     n = req_data["y"]
+    z = req_data["z"]
     # Validation of m and n should occur before form submission, but some is here too.
     # To avoid some trivial base cases, assume m >= 2 and n >= 2
     if not m.isnumeric():
@@ -195,16 +196,21 @@ def validate_input(req_data):
     else:
         n = int(n)
         n = max(2,min(50,n))
-    return m, n, req_data["do_save"], int(req_data["room_size"]), req_data["corridor_preference"]
+    if not z.isnumeric():
+        z = 1
+    else:
+        z = int(z)
+        z = max(1,min(50,z))
+    return m, n, req_data["do_save"], int(req_data["room_size"]), req_data["corridor_preference"], z
 
-def build_maze(req_data, app):
-    m, n, do_save, room_size, corridor_preference = validate_input(req_data)
+# Build a single, self-contained level (with stairs).
+def build_level(m, n, corridor_preference, room_size, floor, max_floor):
     g = PartialGrid(m,n, corridor_preference)
     for i in range(m*n-1):
         g.assign_edge(g.edge_sample())
         #g.validate()
     
-     # Initialize the full maze
+    # Initialize the full maze
     maze = [
         ['wall' for j in range((room_size+1)*n-1)]
     for i in range((room_size+1)*m-1)]
@@ -226,9 +232,31 @@ def build_maze(req_data, app):
             else:
                 for j in range(room_size):
                     maze[(room_size+1)*max(node1.x,node2.x)-1][(room_size+1)*node1.y+j] = 'floor'
+    # For now, stairs at the corner
+    if (floor > 0):
+        if (floor%2):
+            maze[0][len(maze[0])-1] = "stairs_down"
+        else:
+            maze[len(maze)-1][0] = "stairs_down"
+    if (floor < max_floor-1):
+        if (floor%2):
+            maze[len(maze)-1][0] = "stairs_up"
+        else:
+            maze[0][len(maze[0])-1] = "stairs_up"
+    return maze
 
+# Build the full maze, with multiple levels (if selected)
+def build_maze(req_data, app):
+    m, n, do_save, room_size, corridor_preference, z = validate_input(req_data)
+    maze = []
+    for i in range(z):
+        maze.append(build_level(m, n, corridor_preference, room_size, i, z))
+    
     # Process results
     result = {"tiles":maze}
+    result["start_x"] = len(result["tiles"][0])-1
+    result["start_y"] = 0
+    result["floor"] = 0
     if (do_save):
         path = app.instance_path+"/saved_maps"
         map_filename = "map"+str(len(os.listdir(path)))+".json"

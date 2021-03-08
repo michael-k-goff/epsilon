@@ -17,7 +17,7 @@ def hello_world():
 def mapgen():
     req_data = request.get_json()
 
-    return maze.build_maze(req_data, app)
+    return maze.build_maze3D(req_data, app)
 
 @app.route('/favicon.ico')
 def favicon():

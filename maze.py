@@ -11,6 +11,14 @@ class Cell:
     def display(self):
         print("Grid cell. X: "+str(self.x)+", Y: "+str(self.y))
 
+class Cell3D:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+    def display(self):
+        print("Grid cell. X: "+str(self.x)+", Y: "+str(self.y)+", Z: "+str(self.z))
+
 class Edge:
     def __init__(self,start,end,directed=False):
         self.start = start
@@ -37,6 +45,34 @@ class Grid:
 
         # Incidences
         self.neighbors = [[] for i in range(m*n)]
+        for i in range(len(self.edges)):
+            self.neighbors[self.edges[i].start].append(self.edges[i])
+            self.neighbors[self.edges[i].end].append(self.edges[i])
+
+# For a general 3D dungeon
+class Grid3D:
+    def __init__(self, m, n, z):
+        # Nodes
+        self.num_nodes = m*n*z
+        self.nodes = [Cell3D(i//(n*z),(i%(n*z))//z, i%z) for i in range(m*n*z)]
+
+        # Edges
+        self.edges = []
+        for i in range(m):
+            for j in range(n):
+                for k in range(z-1):
+                    self.edges.append(Edge(i*n*z + j*z + k, i*n*z + j*z + k+1))
+        for i in range(m):
+            for j in range(n-1):
+                for k in range(z):
+                    self.edges.append(Edge(i*n*z + j*z + k, i*n*z + (j+1)*z + k))
+        for i in range(m-1):
+            for j in range(n):
+                for k in range(z):
+                    self.edges.append(Edge(i*n*z + j*z + k, (i+1)*n*z + j*z + k))
+
+        # Incidences
+        self.neighbors = [[] for i in range(m*n*z)]
         for i in range(len(self.edges)):
             self.neighbors[self.edges[i].start].append(self.edges[i])
             self.neighbors[self.edges[i].end].append(self.edges[i])
@@ -179,6 +215,116 @@ class PartialGrid(Grid):
                 e = self.edges[self.weights[key][i]]
                 if e.status != key:
                     print("Mismatch found in validation")
+
+class PartialGrid3D(Grid):
+    def __init__(self, m,n,z, corridor_preference):
+        Grid3D.__init__(self, m,n,z)
+        self.corridor_preference = corridor_preference
+        # Establish initial edge class allocation
+        self.weights = {w:[] for w in weight_classes[corridor_preference]}
+        self.weights_lengths = {w:0 for w in weight_classes[corridor_preference]}
+        for i in range(len(self.edges)):
+            self.edges[i].status = "Unavailable"
+            if self.edges[i].start == 0 or self.edges[i].end == 0:
+                self.edges[i].status = "Short"
+            self.weights[self.edges[i].status].append(i)
+            self.edges[i].status_index = self.weights_lengths[self.edges[i].status]
+            self.weights_lengths[self.edges[i].status] += 1
+            # Need index so we can identify by neighbor
+            self.edges[i].index = i
+
+    # Sample an edge that can be added to graph 
+    def edge_sample(self):
+        full_weight = sum([weight_classes[self.corridor_preference][key]*self.weights_lengths[key] for key in weight_classes[self.corridor_preference]])
+        sampler = random.uniform(0,full_weight)
+        weight_class = "Unavailable" # Should always be overwritten; otherwise it's a bug
+        for key in weight_classes[self.corridor_preference]:
+            if weight_classes[self.corridor_preference][key]*self.weights_lengths[key] > 0:
+                weight_class = key
+            if sampler < weight_classes[self.corridor_preference][key]*self.weights_lengths[key]:
+                break
+            sampler -= weight_classes[self.corridor_preference][key]*self.weights_lengths[key]
+        edge_choice = self.weights[weight_class][int(sampler//weight_classes[self.corridor_preference][weight_class])]
+        if (self.edges[edge_choice].status != weight_class):
+            print("Mismatch found in edge sampling: should be "+weight_class+" and is "+self.edges[edge_choice].status)
+            self.validate()
+        return edge_choice
+
+    # Determine which edge class should be assigned to an edge
+    # Will update in the 3D case later.
+    def get_edge_class(self, edge_num):
+        endpoints = [self.edges[edge_num].start, self.edges[edge_num].end]
+        for i in range(len(self.neighbors[endpoints[0]])):
+            outer_edge = self.neighbors[endpoints[0]][i]
+            if outer_edge.status == "Included":
+                outer_node = outer_edge.start
+                if outer_node == endpoints[0]:
+                    outer_node = outer_edge.end
+                if self.nodes[outer_node].x == self.nodes[endpoints[1]].x:
+                    return "Long"
+                if self.nodes[outer_node].y == self.nodes[endpoints[1]].y:
+                    return "Long"
+        for i in range(len(self.neighbors[endpoints[1]])):
+            outer_edge = self.neighbors[endpoints[1]][i]
+            if outer_edge.status == "Included":
+                outer_node = outer_edge.start
+                if outer_node == endpoints[1]:
+                    outer_node = outer_edge.end
+                if self.nodes[outer_node].x == self.nodes[endpoints[0]].x:
+                    return "Long"
+                if self.nodes[outer_node].y == self.nodes[endpoints[0]].y:
+                    return "Long"
+        return "Short"
+
+    # Assign a new weight class to an edge, updating all indices as needed
+    def update_class(self, edge_num, new_class):
+        # Old edge data
+        old_class = self.edges[edge_num].status
+        old_pos = self.edges[edge_num].status_index
+
+        # Update old weight class
+        self.weights_lengths[old_class] -= 1
+        self.weights[old_class][old_pos] = self.weights[old_class][self.weights_lengths[old_class]]
+        self.edges[self.weights[old_class][old_pos]].status_index = old_pos
+
+        # Update new weight class
+        self.weights_lengths[new_class] += 1
+        if (len(self.weights[new_class]) < self.weights_lengths[new_class]):
+            self.weights[new_class].append(edge_num)
+        else:
+            self.weights[new_class][self.weights_lengths[new_class]-1]=edge_num
+        
+        # Set new edge data
+        self.edges[edge_num].status = new_class
+        self.edges[edge_num].status_index = self.weights_lengths[new_class]-1
+        
+    def assign_edge(self, edge_num):
+        # Figure out which endpoint is the new one.
+        endpoints = [self.edges[edge_num].start, self.edges[edge_num].end]
+        old_node, new_node = endpoints[0], endpoints[1]
+        for i in range(len(self.neighbors[endpoints[1]])):
+            if self.neighbors[endpoints[1]][i].status == "Included":
+                new_node, old_node = endpoints[0], endpoints[1]
+        # Include the new edge
+        self.update_class(edge_num, "Included")
+        # Assign new classes to edges adjacent to the new node
+        for i in range(len(self.neighbors[new_node])):
+            e = self.neighbors[new_node][i]
+            if e.status not in ["Included","Excluded","Unavailable"]:
+                self.update_class(e.index, "Excluded")
+            if self.neighbors[new_node][i].status == "Unavailable":
+                self.update_class(e.index, self.get_edge_class(e.index))
+    
+    def display_status(self):
+        for key in weight_classes[self.corridor_preference]:
+            print(key+": "+str(self.weights[key][:self.weights_lengths[key]]))
+
+    def validate(self):
+        for key in weight_classes[self.corridor_preference]:
+            for i in range(self.weights_lengths[key]):
+                e = self.edges[self.weights[key][i]]
+                if e.status != key:
+                    print("Mismatch found in validation")
         
 def validate_input(req_data):
     m = req_data["x"]
@@ -245,12 +391,75 @@ def build_level(m, n, corridor_preference, room_size, floor, max_floor):
             maze[0][len(maze[0])-1] = "stairs_up"
     return maze
 
+# Build a full 3D maze
+def build_level3D(m, n, corridor_preference, room_size, max_floor):
+    g = PartialGrid3D(m,n,max_floor, corridor_preference)
+    for i in range(m*n*max_floor-1):
+        g.assign_edge(g.edge_sample())
+        #g.validate()
+    
+    # Initialize the full maze
+    maze = []
+    for i in range(max_floor):
+        maze.append(
+            [
+                ['wall' for j in range((room_size+1)*n-1)]
+            for i in range((room_size+1)*m-1)]
+        )
+
+    for i in range(m):
+        for j in range(n):
+            for ii in range(room_size):
+                for jj in range(room_size):
+                    for k in range(max_floor):
+                        maze[k][(room_size+1)*i+ii][(room_size+1)*j+jj] = 'floor'
+    
+    # Knock out walls based on the grid defined above
+    for i in range(len(g.edges)):
+        if g.edges[i].status == "Included":
+            node1 = g.nodes[g.edges[i].start]
+            node2 = g.nodes[g.edges[i].end]
+            offset = (min(node1.z, node2.z)%2)*(room_size-1)
+            if node1.x == node2.x and node1.y != node2.y:
+                for j in range(room_size):
+                    maze[node1.z][(room_size+1)*node1.x+j][(room_size+1)*max(node1.y,node2.y)-1] = 'floor'
+            elif node1.y == node2.y and node1.x != node2.x:
+                for j in range(room_size):
+                    maze[node1.z][(room_size+1)*max(node1.x,node2.x)-1][(room_size+1)*node1.y+j] = 'floor'
+            elif node2.z > node1.z:
+                maze[node1.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_up"
+                maze[node2.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_down"
+            elif node2.z < node1.z:
+                maze[node1.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_down"
+                maze[node2.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_up"
+    return maze
+
 # Build the full maze, with multiple levels (if selected)
 def build_maze(req_data, app):
     m, n, do_save, room_size, corridor_preference, z = validate_input(req_data)
     maze = []
     for i in range(z):
         maze.append(build_level(m, n, corridor_preference, room_size, i, z))
+    
+    # Process results
+    result = {"tiles":maze}
+    result["start_x"] = len(result["tiles"][0])-1
+    result["start_y"] = 0
+    result["floor"] = 0
+    if (do_save):
+        path = app.instance_path+"/saved_maps"
+        map_filename = "map"+str(len(os.listdir(path)))+".json"
+        print(map_filename)
+
+        file1 = open(path+"/"+map_filename, "w")
+        file1.write(str(result))
+        file1.close()
+    return result
+
+# Build the full maze, with multiple levels (if selected)
+def build_maze3D(req_data, app):
+    m, n, do_save, room_size, corridor_preference, z = validate_input(req_data)
+    maze = build_level3D(m,n,corridor_preference,room_size,z)
     
     # Process results
     result = {"tiles":maze}

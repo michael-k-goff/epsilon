@@ -27,8 +27,6 @@ add_navigation = () => {
                 target_position[1] = Math.min(map_data.tiles[map_data.floor][map_data.x].length-1, map_data.y+1);
                 event.preventDefault();
             }
-            console.log(target_position[0]);
-            console.log(map_data.x);
             if (map_data.x === target_position[0] && map_data.y === target_position[1]) {
                 return;
             }

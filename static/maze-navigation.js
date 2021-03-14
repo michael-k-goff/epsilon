@@ -39,10 +39,10 @@ add_navigation = () => {
             }
 
             // Proces stairs
-            if (map_data.tiles[map_data.floor][target_position[0]][target_position[1]] == "stairs_up") {
+            if (map_data.overlay[map_data.floor][target_position[0]][target_position[1]] == "stairs_up") {
                 map_data.floor += 1;
             }
-            else if (map_data.tiles[map_data.floor][target_position[0]][target_position[1]] == "stairs_down") {
+            else if (map_data.overlay[map_data.floor][target_position[0]][target_position[1]] == "stairs_down") {
                 map_data.floor -= 1;
             }
             // The whole map is remade to update the displayed position. Consider revising this.

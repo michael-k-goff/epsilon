@@ -238,11 +238,17 @@ def build_level3D(m, n, corridor_preference, room_size, max_floor):
     
     # Initialize the full maze
     maze = []
+    overlay = []
     for i in range(max_floor):
         maze.append(
             [
                 ['wall' for j in range((room_size+1)*n-1)]
-            for i in range((room_size+1)*m-1)]
+            for i in range((room_size+1)*m-1)]            
+        )
+        overlay.append(
+            [
+                ['nothing' for j in range((room_size+1)*n-1)]
+            for i in range((room_size+1)*m-1)]            
         )
 
     for i in range(m):
@@ -265,20 +271,24 @@ def build_level3D(m, n, corridor_preference, room_size, max_floor):
                 for j in range(room_size):
                     maze[node1.z][(room_size+1)*max(node1.x,node2.x)-1][(room_size+1)*node1.y+j] = 'floor'
             elif node2.z > node1.z:
-                maze[node1.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_up"
-                maze[node2.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_down"
+                maze[node1.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = 'floor'
+                maze[node2.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = 'floor'
+                overlay[node1.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_up"
+                overlay[node2.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_down"
             elif node2.z < node1.z:
-                maze[node1.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_down"
-                maze[node2.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_up"
-    return maze
+                maze[node1.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = 'floor'
+                maze[node2.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = 'floor'
+                overlay[node1.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_down"
+                overlay[node2.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_up"
+    return {"maze":maze, "overlay":overlay}
 
 # Build the full maze, with multiple levels (if selected)
 def build_maze3D(req_data, app):
     m, n, do_save, room_size, corridor_preference, z = validate_input(req_data)
-    maze = build_level3D(m,n,corridor_preference,room_size,z)
+    maze_data = build_level3D(m,n,corridor_preference,room_size,z)
     
     # Process results
-    result = {"tiles":maze}
+    result = {"tiles":maze_data["maze"], "overlay":maze_data["overlay"]}
     result["start_x"] = len(result["tiles"][0])-1
     result["start_y"] = 0
     result["floor"] = 0

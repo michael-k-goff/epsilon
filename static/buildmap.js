@@ -1,5 +1,11 @@
 map_data = {}
 
+make_image_node = (image) => {
+    var node = document.createElement("img");
+    node.setAttribute('src','static/'+image+'.png');
+    return node;
+}
+
 make_map = () => {
     // Clear out the old tiles
     let tiles = document.getElementById("map");
@@ -13,9 +19,17 @@ make_map = () => {
         for (let j=0; j<map_data.tiles[map_data.floor][i].length; j++) {
             let tile = document.createElement('div');
             if (i === map_data.x && j === map_data.y) {
-                tile.innerHTML = "<p>?</p>";
+                tile.innerHTML = "<span class='map-text'>?</span>";
             }
-            tile.setAttribute('class', 'tile '+map_data.tiles[map_data.floor][i][j]);
+            tile_type = map_data.tiles[map_data.floor][i][j];
+            overlay_type = map_data.overlay[map_data.floor][i][j];
+            if (overlay_type === "stairs_up") {
+                tile.appendChild(make_image_node("stone_stairs_up"));
+            }
+            if (overlay_type === "stairs_down") {
+                tile.appendChild(make_image_node("stone_stairs_down"));
+            }
+            tile.setAttribute('class', 'tile '+tile_type+' '+overlay_type);
             tile_row.appendChild(tile);
         }
         tiles.appendChild(tile_row);
@@ -69,6 +83,7 @@ generate_map = (do_save) => {
 
         // Build the map in the map div.
         map_data.tiles = response.tiles;
+        map_data.overlay = response.overlay;
         map_data.x = response.start_x;
         map_data.y = response.start_y;
         map_data.floor = response.floor;

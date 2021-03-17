@@ -5,7 +5,7 @@ add_navigation = () => {
 
     document.addEventListener("keydown", event => {
         // The parameter event is of the type KeyboardEvent
-        if (event.repeat || tiles.length == 0) {
+        if (tiles.length == 0) {
             return;
         }
         if (event.key==="ArrowUp" || event.key==="ArrowDown" || event.key==="ArrowLeft" || event.key==="ArrowRight") {

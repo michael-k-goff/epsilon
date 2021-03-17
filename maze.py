@@ -15,6 +15,8 @@ class Cell3D(Node):
         self.z = args[2]
     def display(self):
         print("Grid cell. X: "+str(self.x)+", Y: "+str(self.y)+", Z: "+str(self.z))
+    def as_string(self):
+        return "("+str(self.x) + ", " + str(self.y) + ", " + str(self.z) + ")"
 
 class Edge:
     def __init__(self,start,end,directed=False):
@@ -69,21 +71,32 @@ weight_classes = {
         "Excluded":0,
         "Unavailable":0,
         "Long":1, # Would extend a corridor
-        "Short":1 # Would not extend a corridor
+        "Short":1, # Would not extend a corridor
+        "Stairs":1
     },
     "long": {
         "Included":0,
         "Excluded":0,
         "Unavailable":0,
         "Long":5, # Would extend a corridor
-        "Short":1 # Would not extend a corridor
+        "Short":1, # Would not extend a corridor
+        "Stairs":3
     },
     "short": {
         "Included":0,
         "Excluded":0,
         "Unavailable":0,
         "Long":1, # Would extend a corridor
-        "Short":5 # Would not extend a corridor
+        "Short":5, # Would not extend a corridor
+        "Stairs":3
+    },
+    "few_stairs": {
+        "Included":0,
+        "Excluded":0,
+        "Unavailable":0,
+        "Long":5, # Would extend a corridor
+        "Short":5, # Would not extend a corridor
+        "Stairs":1
     }
 }
 
@@ -93,6 +106,8 @@ class PartialGraph(DungeonGraph):
         self.corridor_preference = corridor_preference
         self.weights = {w:[] for w in weight_classes[corridor_preference]}
         self.weights_lengths = {w:0 for w in weight_classes[corridor_preference]}
+        self.distances = [-1 for i in range(self.num_nodes)] # Distances from the starting point
+        self.distances[0] = 0
 
     # Sample an edge that can be added to graph 
     def edge_sample(self):
@@ -107,7 +122,7 @@ class PartialGraph(DungeonGraph):
             sampler -= weight_classes[self.corridor_preference][key]*self.weights_lengths[key]
         edge_choice = self.weights[weight_class][int(sampler//weight_classes[self.corridor_preference][weight_class])]
         if (self.edges[edge_choice].status != weight_class):
-            print("Mismatch found in edge sampling: should be "+weight_class+" and is "+self.edges[edge_choice].status)
+            #print("Mismatch found in edge sampling: should be "+weight_class+" and is "+self.edges[edge_choice].status)
             self.validate()
         return edge_choice
 
@@ -136,10 +151,10 @@ class PartialGraph(DungeonGraph):
     def assign_edge(self, edge_num):
         # Figure out which endpoint is the new one.
         endpoints = [self.edges[edge_num].start, self.edges[edge_num].end]
-        new_node = endpoints[1]
+        old_node, new_node = endpoints[0], endpoints[1]
         for i in range(len(self.neighbors[endpoints[1]])):
             if self.neighbors[endpoints[1]][i].status == "Included":
-                new_node = endpoints[0]
+                new_node, old_node = endpoints[0], endpoints[1]
         # Include the new edge
         self.update_class(edge_num, "Included")
         # Assign new classes to edges adjacent to the new node
@@ -149,6 +164,7 @@ class PartialGraph(DungeonGraph):
                 self.update_class(e.index, "Excluded")
             if self.neighbors[new_node][i].status == "Unavailable":
                 self.update_class(e.index, self.get_edge_class(e.index))
+            self.distances[new_node] = self.distances[old_node] + 1
     
     # Meant to be overridden by the class defining specifically the graph.
     def get_edge_class(self, edge_num):
@@ -157,6 +173,7 @@ class PartialGraph(DungeonGraph):
     def display_status(self):
         for key in weight_classes[self.corridor_preference]:
             print(key+": "+str(self.weights[key][:self.weights_lengths[key]]))
+            pass
 
     def validate(self):
         for key in weight_classes[self.corridor_preference]:
@@ -164,6 +181,7 @@ class PartialGraph(DungeonGraph):
                 e = self.edges[self.weights[key][i]]
                 if e.status != key:
                     print("Mismatch found in validation")
+                    pass
 
 class PartialGrid3D(Grid3D, PartialGraph):
     def __init__(self, m,n,z, corridor_preference):
@@ -173,7 +191,12 @@ class PartialGrid3D(Grid3D, PartialGraph):
         for i in range(len(self.edges)):
             self.edges[i].status = "Unavailable"
             if self.edges[i].start == 0 or self.edges[i].end == 0:
-                self.edges[i].status = "Short"
+                start_vertex = self.nodes[self.edges[i].start]
+                end_vertex = self.nodes[self.edges[i].end]
+                if (start_vertex.z > 0 or end_vertex.z > 0):
+                    self.edges[i].status = "Stairs"
+                else:
+                    self.edges[i].status = "Short"
             self.weights[self.edges[i].status].append(i)
             self.edges[i].status_index = self.weights_lengths[self.edges[i].status]
             self.weights_lengths[self.edges[i].status] += 1
@@ -184,6 +207,8 @@ class PartialGrid3D(Grid3D, PartialGraph):
     # Will update in the 3D case later.
     def get_edge_class(self, edge_num):
         endpoints = [self.edges[edge_num].start, self.edges[edge_num].end]
+        if self.nodes[endpoints[0]].z != self.nodes[endpoints[1]].z:
+            return "Stairs"
         for i in range(len(self.neighbors[endpoints[0]])):
             outer_edge = self.neighbors[endpoints[0]][i]
             if outer_edge.status == "Included":
@@ -205,6 +230,18 @@ class PartialGrid3D(Grid3D, PartialGraph):
                 if self.nodes[outer_node].y == self.nodes[endpoints[0]].y:
                     return "Long"
         return "Short"
+
+    def get_treasure(self):
+        farthest_nodes = []
+        farthest_distance = 0
+        for i in range(self.num_nodes):
+            if self.distances[i] > farthest_distance:
+                farthest_nodes = []
+                farthest_distance = self.distances[i]
+            if self.distances[i] == farthest_distance:
+                farthest_nodes.append(i)
+        random_node = self.nodes[farthest_nodes[int(random.uniform(0,len(farthest_nodes)))]]
+        return {"x":random_node.x, "y":random_node.y, "z":random_node.z}
         
 def validate_input(req_data):
     m = req_data["x"]
@@ -234,7 +271,7 @@ def build_level3D(m, n, corridor_preference, room_size, max_floor):
     g = PartialGrid3D(m,n,max_floor, corridor_preference)
     for i in range(m*n*max_floor-1):
         g.assign_edge(g.edge_sample())
-        #g.validate()
+    treasure = g.get_treasure()
     
     # Initialize the full maze
     maze = []
@@ -280,6 +317,13 @@ def build_level3D(m, n, corridor_preference, room_size, max_floor):
                 maze[node2.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = 'floor'
                 overlay[node1.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_down"
                 overlay[node2.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_up"
+    # Treasure near the starting point for now
+    treasure_x = (room_size+1)*treasure["x"]
+    treasure_y = (room_size+1)*treasure["y"]
+    if (room_size > 1):
+        treasure_x += 1
+        treasure_y += 1
+    overlay[treasure["z"]][treasure_x][treasure_y] = "treasure"
     return {"maze":maze, "overlay":overlay}
 
 # Build the full maze, with multiple levels (if selected)
@@ -289,13 +333,14 @@ def build_maze3D(req_data, app):
     
     # Process results
     result = {"tiles":maze_data["maze"], "overlay":maze_data["overlay"]}
-    result["start_x"] = len(result["tiles"][0])-1
+    #result["start_x"] = len(result["tiles"][0])-1
+    result["start_x"] = 0
     result["start_y"] = 0
     result["floor"] = 0
     if (do_save):
         path = app.instance_path+"/saved_maps"
         map_filename = "map"+str(len(os.listdir(path)))+".json"
-        print(map_filename)
+        #print(map_filename)
 
         file1 = open(path+"/"+map_filename, "w")
         file1.write(str(result))

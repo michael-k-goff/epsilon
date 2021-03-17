@@ -29,6 +29,9 @@ make_map = () => {
             if (overlay_type === "stairs_down") {
                 tile.appendChild(make_image_node("stone_stairs_down"));
             }
+            if (overlay_type === "treasure") {
+                tile.appendChild(make_image_node("chest"));
+            }
             tile.setAttribute('class', 'tile '+tile_type+' '+overlay_type);
             tile_row.appendChild(tile);
         }

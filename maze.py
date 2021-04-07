@@ -17,6 +17,9 @@ class Cell3D(Node):
         print("Grid cell. X: "+str(self.x)+", Y: "+str(self.y)+", Z: "+str(self.z))
     def as_string(self):
         return "("+str(self.x) + ", " + str(self.y) + ", " + str(self.z) + ")"
+    # The key for the node that should appear in the dictionary of nodes
+    def dict_key(self):
+        return str(self.x) + "," + str(self.y) + "," + str(self.z)
 
 class Edge:
     def __init__(self,start,end,directed=False):
@@ -31,6 +34,8 @@ class DungeonGraph:
         self.initnodes(*args)
         self.initedges(*args)
         self.initincidences(*args)
+        if not hasattr(self, "start_vertex_num"):
+            self.start_vertex_num = 0 # Should generally be overwritten
     def initnodes(self, *args): # Should be overridden in general
         self.num_nodes = 0
     def initedges(self, *args): # Should be overridden in general
@@ -64,6 +69,64 @@ class Grid3D(DungeonGraph):
             for j in range(n):
                 for k in range(z):
                     self.edges.append(Edge(i*n*z + j*z + k, (i+1)*n*z + j*z + k))
+
+def box(x,y,z,m,n,zz):
+    return True
+
+def taper(x,y,z,m,n,zz):
+    distance_from_edge = min(x,y,m-1-x,n-1-y)
+    max_cutoff = min((m-1)//2, (n-1)//2)
+    return distance_from_edge >= max_cutoff * z/(zz-1)
+
+def round(x,y,z,m,n,zz):
+    return (m//2-x)**2/(m//2)**2 + (n//2-y)**2/(n//2)**2 <= 1
+
+def get_starting_point(preferences):
+    if (preferences["shape"]=="box"):
+        return {"x":0, "y":0, "z":0}
+    if (preferences["shape"]=="taper"):
+        return {"x":0, "y":0, "z":0}
+    if (preferences["shape"]=="round"):
+        return {"x":preferences["m"]-1, "y":preferences["n"]//2, "z":0}
+    return {"x":0,"y":0,"z":0} # Shouldn't hit this line.
+
+# A non-rectangular 3D grid.
+class GeneralGrid3D(DungeonGraph):
+    def initnodes(self, *args):
+        m, n, zz, node_function, = args[0]["m"], args[0]["n"], args[0]["z"], args[0]["node_function"]
+        start_point = args[0]["start_point"]
+        self.start_point = start_point
+        self.num_nodes = 0
+        self.node_function = node_function
+        self.edge_dict = {} # A dictionary that makes it easy to look up edges by x,y,z coordinates
+        self.nodes = []
+        for i in range(m*n*zz):
+            x,y,z = i//(n*zz),(i%(n*zz))//zz, i%zz
+            if (self.node_present(x,y,z,m,n,zz)):
+                self.num_nodes += 1
+                self.nodes.append(Cell3D(x,y,z))
+            dict_string = str(x)+","+str(y)+","+str(z)
+            self.edge_dict[dict_string] = self.num_nodes - 1
+        
+        node_string = str(start_point["x"])+","+str(start_point["y"])+","+str(start_point["z"])
+        self.start_point = start_point
+        self.start_vertex_num = self.edge_dict[node_string]
+    def node_present(self,x,y,z, m, n, zz):
+        if (x<0 or x>=m or y<0 or y>=n or z<0 or z>=zz):
+            return False
+        return self.node_function(x,y,z,m,n,zz)
+    def initedges(self, *args):
+        m, n, zz = args[0]["m"], args[0]["n"], args[0]["z"]
+        self.edges = []
+        for i in range(self.num_nodes):
+            x,y,z = self.nodes[i].x, self.nodes[i].y, self.nodes[i].z
+            start_node = self.edge_dict[",".join([str(x),str(y),str(z)])]
+            pn = [[x-1,y,z],[x+1,y,z],[x,y-1,z],[x,y+1,z],[x,y,z-1],[x,y,z+1]] # Possible neighbors, if they exist
+            for j in range(len(pn)):
+                if (self.node_present(pn[j][0],pn[j][1],pn[j][2],m,n,zz)):
+                    end_node = self.edge_dict[",".join([str(pn[j][0]),str(pn[j][1]),str(pn[j][2])])]
+                    if end_node > start_node:
+                        self.edges.append(Edge(start_node, end_node))
 
 weight_classes = {
     "none": {
@@ -106,9 +169,11 @@ class PartialGraph(DungeonGraph):
         self.corridor_preference = corridor_preference
         self.weights = {w:[] for w in weight_classes[corridor_preference]}
         self.weights_lengths = {w:0 for w in weight_classes[corridor_preference]}
-        self.distances = [-1 for i in range(self.num_nodes)] # Distances from the starting point
-        self.distances[0] = 0
 
+    def set_distance(self):
+        self.distances = [-1 for i in range(self.num_nodes)] # Distances from the starting point
+        self.distances[self.start_vertex_num] = 0
+        
     # Sample an edge that can be added to graph 
     def edge_sample(self):
         full_weight = sum([weight_classes[self.corridor_preference][key]*self.weights_lengths[key] for key in weight_classes[self.corridor_preference]])
@@ -153,7 +218,7 @@ class PartialGraph(DungeonGraph):
         endpoints = [self.edges[edge_num].start, self.edges[edge_num].end]
         old_node, new_node = endpoints[0], endpoints[1]
         for i in range(len(self.neighbors[endpoints[1]])):
-            if self.neighbors[endpoints[1]][i].status == "Included":
+            if self.neighbors[endpoints[1]][i].status == "Included" or endpoints[1] == self.start_vertex_num:
                 new_node, old_node = endpoints[0], endpoints[1]
         # Include the new edge
         self.update_class(edge_num, "Included")
@@ -183,17 +248,25 @@ class PartialGraph(DungeonGraph):
                     print("Mismatch found in validation")
                     pass
 
-class PartialGrid3D(Grid3D, PartialGraph):
-    def __init__(self, m,n,z, corridor_preference):
-        super(PartialGrid3D, self).__init__(m,n,z)
-        self.set_variables(corridor_preference)
+class PartialGrid3D(GeneralGrid3D, PartialGraph):
+    def __init__(self, preferences):
+        start_point = get_starting_point(preferences)
+        preferences["node_function"] = {
+            "box":box,
+            "taper":taper,
+            "round":round
+        }[preferences["shape"]]
+        preferences["start_point"] = start_point
+        super(PartialGrid3D, self).__init__(preferences)
+
+        self.set_variables(preferences["corridor_preference"])
         # Establish initial edge class allocation
         for i in range(len(self.edges)):
             self.edges[i].status = "Unavailable"
-            if self.edges[i].start == 0 or self.edges[i].end == 0:
+            if self.edges[i].start == self.start_vertex_num or self.edges[i].end == self.start_vertex_num:
                 start_vertex = self.nodes[self.edges[i].start]
                 end_vertex = self.nodes[self.edges[i].end]
-                if (start_vertex.z > 0 or end_vertex.z > 0):
+                if (start_vertex.z != end_vertex.z):
                     self.edges[i].status = "Stairs"
                 else:
                     self.edges[i].status = "Short"
@@ -204,7 +277,6 @@ class PartialGrid3D(Grid3D, PartialGraph):
             self.edges[i].index = i
 
     # Determine which edge class should be assigned to an edge
-    # Will update in the 3D case later.
     def get_edge_class(self, edge_num):
         endpoints = [self.edges[edge_num].start, self.edges[edge_num].end]
         if self.nodes[endpoints[0]].z != self.nodes[endpoints[1]].z:
@@ -264,22 +336,39 @@ def validate_input(req_data):
     else:
         z = int(z)
         z = max(1,min(50,z))
-    return m, n, req_data["do_save"], int(req_data["room_size"]), req_data["corridor_preference"], z
+    return {
+        "m":m,
+        "n":n,
+        "z":z,
+        "do_save":req_data["do_save"],
+        "room_size":req_data["room_size"],
+        "corridor_preference":req_data["corridor_preference"],
+        "shape":req_data["shape"]
+    }
 
 # Build a full 3D maze
-def build_level3D(m, n, corridor_preference, room_size, max_floor):
-    g = PartialGrid3D(m,n,max_floor, corridor_preference)
-    for i in range(m*n*max_floor-1):
+def build_level3D(preferences):
+    g = PartialGrid3D(preferences)
+    g.set_distance()
+    for i in range(g.num_nodes-1):
         g.assign_edge(g.edge_sample())
     treasure = g.get_treasure()
+    max_floor = int(preferences["z"])
+    room_size = int(preferences["room_size"])
+    m,n = int(preferences["m"]), int(preferences["n"])
     
     # Initialize the full maze
     maze = []
     overlay = []
+    start_point = {
+        "x":g.start_point["x"]*(room_size+1),
+        "y":g.start_point["y"]*(room_size+1),
+        "z":g.start_point["z"]
+    }
     for i in range(max_floor):
         maze.append(
             [
-                ['wall' for j in range((room_size+1)*n-1)]
+                ['outside' for j in range((room_size+1)*n-1)]
             for i in range((room_size+1)*m-1)]            
         )
         overlay.append(
@@ -293,7 +382,10 @@ def build_level3D(m, n, corridor_preference, room_size, max_floor):
             for ii in range(room_size):
                 for jj in range(room_size):
                     for k in range(max_floor):
-                        maze[k][(room_size+1)*i+ii][(room_size+1)*j+jj] = 'floor'
+                        if (g.node_present(i,j,k,m,n,max_floor)):
+                            maze[k][(room_size+1)*i+ii][(room_size+1)*j+jj] = 'floor'
+                        else:
+                            maze[k][(room_size+1)*i+ii][(room_size+1)*j+jj] = 'outside'
     
     # Knock out walls based on the grid defined above
     for i in range(len(g.edges)):
@@ -317,30 +409,44 @@ def build_level3D(m, n, corridor_preference, room_size, max_floor):
                 maze[node2.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = 'floor'
                 overlay[node1.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_down"
                 overlay[node2.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_up"
-    # Treasure near the starting point for now
+        else:
+            node1 = g.nodes[g.edges[i].start]
+            node2 = g.nodes[g.edges[i].end]
+            if node1.x == node2.x and node1.y != node2.y:
+                for j in range(room_size):
+                    maze[node1.z][(room_size+1)*node1.x+j][(room_size+1)*max(node1.y,node2.y)-1] = 'wall'
+            elif node1.y == node2.y and node1.x != node2.x:
+                for j in range(room_size):
+                    maze[node1.z][(room_size+1)*max(node1.x,node2.x)-1][(room_size+1)*node1.y+j] = 'wall'
+
+    # Make the corners walls if necessary
+    for i in range(m-1):
+        for j in range(n-1):
+            for k in range(max_floor):
+                if g.node_present(i,j,k,m,n,max_floor) and g.node_present(i+1,j,k,m,n,max_floor) and g.node_present(i,j+1,k,m,n,max_floor) and g.node_present(i+1,j+1,k,m,n,max_floor):
+                    maze[k][(room_size+1)*(i+1)-1][(room_size+1)*(j+1)-1] = 'wall'
+    
     treasure_x = (room_size+1)*treasure["x"]
     treasure_y = (room_size+1)*treasure["y"]
     if (room_size > 1):
         treasure_x += 1
-        treasure_y += 1
     overlay[treasure["z"]][treasure_x][treasure_y] = "treasure"
-    return {"maze":maze, "overlay":overlay}
+    return {"maze":maze, "overlay":overlay, "start_point":start_point}
 
 # Build the full maze, with multiple levels (if selected)
 def build_maze3D(req_data, app):
-    m, n, do_save, room_size, corridor_preference, z = validate_input(req_data)
-    maze_data = build_level3D(m,n,corridor_preference,room_size,z)
+    preferences = validate_input(req_data)
+    do_save = preferences["do_save"]
+    maze_data = build_level3D(preferences)
     
     # Process results
     result = {"tiles":maze_data["maze"], "overlay":maze_data["overlay"]}
-    #result["start_x"] = len(result["tiles"][0])-1
-    result["start_x"] = 0
-    result["start_y"] = 0
-    result["floor"] = 0
+    result["start_x"] = maze_data["start_point"]["x"]
+    result["start_y"] = maze_data["start_point"]["y"]
+    result["floor"] = maze_data["start_point"]["z"]
     if (do_save):
         path = app.instance_path+"/saved_maps"
         map_filename = "map"+str(len(os.listdir(path)))+".json"
-        #print(map_filename)
 
         file1 = open(path+"/"+map_filename, "w")
         file1.write(str(result))

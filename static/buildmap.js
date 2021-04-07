@@ -50,6 +50,7 @@ generate_map = (do_save) => {
     let z = document.getElementById('z').value;
     let room_size = document.getElementById('room_size').value;
     let corridor_preference = document.getElementById('corridor_preference').value;
+    let shape = document.getElementById('dungeon_shape').value;
     
     let request_json = {
         method:"post",
@@ -59,7 +60,8 @@ generate_map = (do_save) => {
             "z":z,
             "do_save":do_save,
             "room_size":room_size,
-            "corridor_preference":corridor_preference
+            "corridor_preference":corridor_preference,
+            "shape":shape
         }),
         cache: "no-cache",
         headers: new Headers({

@@ -2,7 +2,7 @@
 
 Project Epsilon is a maze generator.
 
-##### To Run:
+#### To Run:
 
 1. Install [Flask](https://pypi.org/project/Flask/)
 2. Navigate to the project folder on the command line
@@ -10,9 +10,9 @@ Project Epsilon is a maze generator.
 4. Type `flask run`
 5. Navigate the browser to `localhost:5000`
 
-Virtual environment
+It may be necessary to set up a virtual environment.
 
-##### Usage:
+#### Usage:
 
 Through the browser, you can select the numbers of rows, columns, floors, room size, and set preferences for shape of the dungeon and the lengths of hallways or the quantity of stairs.
 
@@ -28,9 +28,9 @@ The `Save Map` option stores the map in a file server-side in a JSON format.
 
 The `Download Map` lets the user download a map client-side in a JSON format.
 
-##### How It Works:
+#### How It Works:
 
-Project Epsilon implements a variant of Prim's Algorithm to generate mazes. It works as follows.
+Project Epsilon implements a variant of [Prim's Algorithm](https://weblog.jamisbuck.org/2011/1/10/maze-generation-prim-s-algorithm) to generate mazes. It works as follows.
 
 Initialize the maze with all possible walls included and only a starting cell marked as open. As possible edges to add, mark all edges that are adjacent to the starting cell. Until all cells are included, pick a random edge that might be included to actually be included, mark both endpoints of edge as included, and mark all edges adjacent to those endpoints are unincludable, except those edges that have already been included.
 
@@ -38,6 +38,6 @@ The `Corridor` option allows the user to select how the random generation will b
 
 The complexity for maze generation is `O(n)`, where `n` is the number of cells (equal to the number of rows times columns times floors for a box-shaped maze) if the number of weight classes is considered constant. If not, then the complexity is `O(nc)`, where `n` is the number of cells and `c` is the number of weight classes.
 
-##### Image Credits:
+#### Image Credits:
 
 The stairs and treasure chest icon are provided by [Dungeon Crawl Stone Soup](https://opengameart.org/content/dungeon-crawl-32x32-tiles), available on OpenGameArt.

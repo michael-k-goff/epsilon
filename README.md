@@ -40,4 +40,4 @@ The complexity for maze generation is `O(n)`, where `n` is the number of cells (
 
 #### Image Credits:
 
-The stairs and treasure chest icon are provided by [Dungeon Crawl Stone Soup](https://opengameart.org/content/dungeon-crawl-32x32-tiles), available on OpenGameArt.
+The stairs and treasure chest icon are provided by [Dungeon Crawl Stone Soup](https://opengameart.org/content/dungeon-crawl-32x32-tiles), available on [OpenGameArt](https://opengameart.org/).

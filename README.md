@@ -4,11 +4,12 @@ Project Epsilon is a maze generator.
 
 #### To Run:
 
-1. Install [Flask](https://pypi.org/project/Flask/)
-2. Navigate to the project folder on the command line
-3. Type `export FLASK_APP=main.py`
-4. Type `flask run`
-5. Navigate the browser to `localhost:5000`
+1. If necessary, install [Flask](https://pypi.org/project/Flask/).
+2. If necessary, install [jinja2](https://jinja.palletsprojects.com/en/3.0.x/).
+3. Navigate to the project folder on the command line.
+4. Type `export FLASK_APP=main.py`.
+5. Type `flask run`.
+6. Navigate the browser to `localhost:5000`. Tested in Chrome.
 
 It may be necessary to set up a virtual environment.
 

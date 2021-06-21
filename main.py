@@ -3,15 +3,24 @@ from flask import render_template
 from flask import request
 from flask import jsonify
 from flask import send_from_directory
+from jinja2 import Environment, PackageLoader, select_autoescape
+import jinja2
 import os
 
+import main_template
 import maze
 
 app = Flask(__name__, static_url_path='/static')
 
+# Jinja2 templates
+env = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"))
+
 @app.route('/')
 def hello_world():
-    return render_template("index.html")
+    #return render_template("index.html")
+    t = env.get_template("index.html")
+    form_data = main_template.generate_template()
+    return t.render(systemname="Project Epsilon",formdata=form_data)
 
 @app.route('/mapgen', methods=['POST'])
 def mapgen():

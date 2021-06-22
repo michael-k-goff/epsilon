@@ -15,58 +15,48 @@
     <h1 style="color: blue">{{systemname}}</h1>
 
     <form>
+        {%- for inp in formdata %}
+        {%- if inp.type == "numeric" %}
         <div class="input-element">
             <div class="input-field">
-                Rows:
+                {{inp.text_name}}:
             </div>
-            <input class="numeric-input" type="text" value="5" id="x" name="x">
+            <input class="numeric-input" type="text" value="{{inp.default}}" id="{{inp.field_name}}" name="{{inp.field_name}}">
         </div>
+        {%- elif inp.type == "box" %}
         <div class="input-element">
             <div class="input-field">
-                Columns:
+                {{inp.text_name}}:
             </div>
-            <input class="numeric-input" type="text" value="5" id="y" name="y">
-        </div>
-        <div class="input-element">
-            <div class="input-field">
-                Room Size:
-            </div>
-            <select class="box" id="room_size" name="room_size">
-                <option value="1">1</option>
-                <option selected value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
+            <select class="box" id="{{inp.field_name}}" name="{{inp.field_name}}">
+                {%- for choice in inp.choices %}
+                {%- if choice == inp.default %}
+                <option selected value="{{choice}}">{{choice}}</option>
+                {%- else %}
+                <option value="{{choice}}">{{choice}}</option>
+                {%- endif %}
+                {%- endfor %}
             </select>
         </div>
+        {%- elif inp.type == "box_text" %}
         <div class="input-element">
             <div class="input-field">
-                Dungeon Shape:
+                {{inp.text_name}}:
             </div>
-            <select class="box-text" id="dungeon_shape" name="dungeon_shape">
-                <option selected value="box">Box</option>
-                <option value="taper">Tapered Tower</option>
-                <option value="round">Round Tower</option>
+            <select class="box-text" id="{{inp.field_name}}" name="{{inp.field_name}}">
+                {%- for i in range(inp.choices|length) %}
+                {%- if choice == inp.default %}
+                <option selected value="{{inp.choices[i]}}">{{inp.choice_names[i]}}</option>
+                {%- else %}
+                <option value="{{inp.choices[i]}}">{{inp.choice_names[i]}}</option>
+                {%- endif %}
+                {%- endfor %}
             </select>
         </div>
-        <div class="input-element">
-            <div class="input-field">
-                Number of Floors:
-            </div>
-            <input class="numeric-input" type="text" value="3" id="z" name="z">
-        </div>
-        <div class="input-element">
-            <div class="input-field">
-                Corridors:
-            </div>
-            <select class="box-text" id="corridor_preference" name="corridor_preference">
-                <option value="none">No Preference</option>
-                <option value="long">Prefer Long</option>
-                <option value="short">Prefer Short</option>
-                <option value="few_stairs">Prefer Few Stairs</option>
-            </select>
-        </div>
-        <button type="button" class="submit-button" onclick="generate_map(0)">Generate Map</button>
-        <button type="button" class="submit-button" onclick="generate_map(1)">Save Map</button>
+        {%- elif inp.type == "button" %}
+        <button type="button" class="submit-button" onclick="{{inp.action}}">{{inp.name}}</button>
+        {%- endif %}
+        {%- endfor %}
     </form>
 
     <div id="map">

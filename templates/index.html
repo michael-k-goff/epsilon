@@ -15,48 +15,54 @@
     <h1 style="color: blue">{{systemname}}</h1>
 
     <form>
-        {%- for inp in formdata %}
-        {%- if inp.type == "numeric" %}
-        <div class="input-element">
-            <div class="input-field">
-                {{inp.text_name}}:
-            </div>
-            <input class="numeric-input" type="text" value="{{inp.default}}" id="{{inp.field_name}}" name="{{inp.field_name}}">
-        </div>
-        {%- elif inp.type == "box" %}
-        <div class="input-element">
-            <div class="input-field">
-                {{inp.text_name}}:
-            </div>
-            <select class="box" id="{{inp.field_name}}" name="{{inp.field_name}}">
-                {%- for choice in inp.choices %}
-                {%- if choice == inp.default %}
-                <option selected value="{{choice}}">{{choice}}</option>
-                {%- else %}
-                <option value="{{choice}}">{{choice}}</option>
+        <div class="grid-container">
+            {%- for inp_list in formdata %}
+            <div class="form-columns">
+                {%- for inp in inp_list %}
+                {%- if inp.type == "numeric" %}
+                <div class="input-element">
+                    <div class="input-field">
+                        {{inp.text_name}}:
+                    </div>
+                    <input class="numeric-input" type="text" value="{{inp.default}}" id="{{inp.field_name}}" name="{{inp.field_name}}">
+                </div>
+                {%- elif inp.type == "box" %}
+                <div class="input-element">
+                    <div class="input-field">
+                        {{inp.text_name}}:
+                    </div>
+                    <select class="box" id="{{inp.field_name}}" name="{{inp.field_name}}">
+                        {%- for choice in inp.choices %}
+                        {%- if choice == inp.default %}
+                        <option selected value="{{choice}}">{{choice}}</option>
+                        {%- else %}
+                        <option value="{{choice}}">{{choice}}</option>
+                        {%- endif %}
+                        {%- endfor %}
+                    </select>
+                </div>
+                {%- elif inp.type == "box_text" %}
+                <div class="input-element">
+                    <div class="input-field">
+                        {{inp.text_name}}:
+                    </div>
+                    <select class="box-text" id="{{inp.field_name}}" name="{{inp.field_name}}">
+                        {%- for i in range(inp.choices|length) %}
+                        {%- if choice == inp.default %}
+                        <option selected value="{{inp.choices[i]}}">{{inp.choice_names[i]}}</option>
+                        {%- else %}
+                        <option value="{{inp.choices[i]}}">{{inp.choice_names[i]}}</option>
+                        {%- endif %}
+                        {%- endfor %}
+                    </select>
+                </div>
+                {%- elif inp.type == "button" %}
+                <button type="button" class="submit-button" onclick="{{inp.action}}">{{inp.name}}</button>
                 {%- endif %}
                 {%- endfor %}
-            </select>
-        </div>
-        {%- elif inp.type == "box_text" %}
-        <div class="input-element">
-            <div class="input-field">
-                {{inp.text_name}}:
             </div>
-            <select class="box-text" id="{{inp.field_name}}" name="{{inp.field_name}}">
-                {%- for i in range(inp.choices|length) %}
-                {%- if choice == inp.default %}
-                <option selected value="{{inp.choices[i]}}">{{inp.choice_names[i]}}</option>
-                {%- else %}
-                <option value="{{inp.choices[i]}}">{{inp.choice_names[i]}}</option>
-                {%- endif %}
-                {%- endfor %}
-            </select>
+            {%- endfor %}
         </div>
-        {%- elif inp.type == "button" %}
-        <button type="button" class="submit-button" onclick="{{inp.action}}">{{inp.name}}</button>
-        {%- endif %}
-        {%- endfor %}
     </form>
 
     <div id="map">

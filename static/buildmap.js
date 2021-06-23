@@ -1,4 +1,4 @@
-map_data = {}
+map_data = {};
 
 make_image_node = (image) => {
     var node = document.createElement("img");

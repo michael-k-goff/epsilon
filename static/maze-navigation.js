@@ -45,7 +45,8 @@ add_navigation = () => {
         if (map_data.x === target_position[0] && map_data.y === target_position[1]) {
             return;
         }
-        if (["floor","stairs_up","stairs_down"].includes(map_data.tiles[map_data.floor][target_position[0]][target_position[1]])) {
+        target_file = map_data.tiles[map_data.floor][target_position[0]][target_position[1]]
+        if (["floor","stairs_up","stairs_down","grass"].includes(target_file)) {
             map_data.x = target_position[0];
             map_data.y = target_position[1];
             navigation_data["time_since_last_move"] = 150;

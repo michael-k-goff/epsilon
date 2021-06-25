@@ -2,7 +2,7 @@ map_data = {};
 
 make_image_node = (image) => {
     var node = document.createElement("img");
-    node.setAttribute('src','static/'+image+'.png');
+    node.setAttribute('src','static/images/'+image+'.png');
     return node;
 }
 

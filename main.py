@@ -9,6 +9,7 @@ import os
 
 import main_template
 import maze
+import overworld
 
 app = Flask(__name__, static_url_path='/static')
 
@@ -16,7 +17,7 @@ app = Flask(__name__, static_url_path='/static')
 env = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"))
 
 @app.route('/')
-def hello_world():
+def main_page():
     #return render_template("index.html")
     t = env.get_template("index.html")
     form_data = main_template.generate_template()
@@ -25,10 +26,10 @@ def hello_world():
 @app.route('/mapgen', methods=['POST'])
 def mapgen():
     req_data = request.get_json()
-
+    #return overworld.build_map(req_data, app)
     return maze.build_maze3D(req_data, app)
 
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'),
+    return send_from_directory(os.path.join(app.root_path, 'static/images'),
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')

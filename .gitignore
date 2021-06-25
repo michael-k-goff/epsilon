@@ -8,3 +8,6 @@ instance
 instructions.txt
 notes.txt
 epsilon notes.txt
+
+# Others
+*.pyc

@@ -18,7 +18,6 @@ env = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"))
 
 @app.route('/')
 def main_page():
-    #return render_template("index.html")
     t = env.get_template("index.html")
     form_data = main_template.generate_template()
     return t.render(systemname="Project Epsilon",formdata=form_data)

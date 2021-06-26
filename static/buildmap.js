@@ -1,5 +1,44 @@
 map_data = {};
 
+build_request_json = (input_dict) => {
+    return {
+        method:"post",
+        body: JSON.stringify(input_dict),
+        cache: "no-cache",
+        headers: new Headers({
+            "content-type": "application/json"
+        })
+    }
+}
+
+build_map = (request_json) => {
+    fetch(
+        "/mapgen", request_json
+    )
+    .then(response => response.json())
+    .then(response => {
+        // Clear out the old tiles
+        let tiles = document.getElementById("map");
+        while (tiles.firstChild) {
+            tiles.removeChild(tiles.firstChild);
+        }
+
+        // Build the map in the map div.
+        map_data.tiles = response.tiles;
+        map_data.overlay = response.overlay;
+        map_data.x = response.start_x;
+        map_data.y = response.start_y;
+        map_data.floor = response.floor;
+        map_data.num_generations = "num_generations" in map_data ? map_data.num_generations+1 : 1;
+        map_data.location = "location" in response ? response.location : {};
+        map_data.navigation = "navigation" in response ? response.navigation : {};
+        make_map();
+        if (map_data.num_generations == 1) {
+            add_navigation();
+        }
+    })
+}
+
 make_image_node = (image) => {
     var node = document.createElement("img");
     node.setAttribute('src','static/images/'+image+'.png');
@@ -52,22 +91,15 @@ generate_map = (do_save) => {
     let corridor_preference = document.getElementById('corridor_preference').value;
     let shape = document.getElementById('dungeon_shape').value;
     
-    let request_json = {
-        method:"post",
-        body: JSON.stringify({
-            "x":x,
-            "y":y,
-            "z":z,
-            "do_save":do_save,
-            "room_size":room_size,
-            "corridor_preference":corridor_preference,
-            "shape":shape
-        }),
-        cache: "no-cache",
-        headers: new Headers({
-            "content-type": "application/json"
-        })
-    }
+    let request_json = build_request_json({
+        "x":x,
+        "y":y,
+        "z":z,
+        "do_save":do_save,
+        "room_size":room_size,
+        "corridor_preference":corridor_preference,
+        "shape":shape
+    })
 
     if (do_save) {
         fetch("/mapgen", request_json)
@@ -75,31 +107,7 @@ generate_map = (do_save) => {
     }
 
     // Build and fire off the POST request
-    fetch(
-        "/mapgen", request_json
-    )
-    .then(response => response.json())
-    .then(response => {
-        // Clear out the old tiles
-        let tiles = document.getElementById("map");
-        while (tiles.firstChild) {
-            tiles.removeChild(tiles.firstChild);
-        }
-
-        // Build the map in the map div.
-        map_data.tiles = response.tiles;
-        map_data.overlay = response.overlay;
-        map_data.x = response.start_x;
-        map_data.y = response.start_y;
-        map_data.floor = response.floor;
-        map_data.num_generations = "num_generations" in map_data ? map_data.num_generations+1 : 1;
-        map_data.location = "location" in response ? response.location : {};
-        map_data.navigation = "navigation" in response ? response.navigation : {};
-        make_map();
-        if (map_data.num_generations == 1) {
-            add_navigation();
-        }
-    })
+    build_map(request_json);
 }
 
 // Based on code at https://stackoverflow.com/questions/3665115/how-to-create-a-file-in-memory-for-user-to-download-but-not-through-server

@@ -78,43 +78,13 @@ add_navigation = () => {
                     new_location = {"x":map_data.location.x, "y":map_data.location.y+1}
                 }
                 if (new_location.x != map_data.location.x || new_location.y != map_data.location.y) {
-                    let request_json = {
-                        method:"post",
-                        body: JSON.stringify({
-                            "location_x":new_location.x,
-                            "location_y":new_location.y
-                        }),
-                        cache: "no-cache",
-                        headers: new Headers({
-                            "content-type": "application/json"
-                        })
-                    }
-                    // Separate function here because this code is largely duplicated
-                    fetch(
-                        "/mapgen", request_json
-                    )
-                    .then(response => response.json())
-                    .then(response => {
-                        // Clear out the old tiles
-                        let tiles = document.getElementById("map");
-                        while (tiles.firstChild) {
-                            tiles.removeChild(tiles.firstChild);
-                        }
-
-                        // Build the map in the map div.
-                        map_data.tiles = response.tiles;
-                        map_data.overlay = response.overlay;
-                        map_data.x = response.start_x;
-                        map_data.y = response.start_y;
-                        map_data.floor = response.floor;
-                        map_data.num_generations = "num_generations" in map_data ? map_data.num_generations+1 : 1;
-                        map_data.location = "location" in response ? response.location : {};
-                        map_data.navigation = "navigation" in response ? response.navigation : {};
-                        make_map();
-                        if (map_data.num_generations == 1) {
-                            add_navigation();
-                        }
-                    })
+                    let request_json = build_request_json({
+                        "location_x":new_location.x,
+                        "location_y":new_location.y,
+                        "x":map_data.x,
+                        "y":map_data.y
+                    });
+                    build_map(request_json);
                 }
             }
         }

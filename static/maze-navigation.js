@@ -62,6 +62,62 @@ add_navigation = () => {
         else if (map_data.overlay[map_data.floor][target_position[0]][target_position[1]] == "stairs_down") {
             map_data.floor -= 1;
         }
+        if (map_data.navigation) {
+            if (map_data.navigation.offscreen) {
+                let new_location = {"x":map_data.location.x, "y":map_data.location.y};
+                if (map_data.x == 0) {
+                    new_location = {"x":map_data.location.x-1, "y":map_data.location.y}
+                }
+                else if (map_data.x == map_data.tiles[0].length-1) {
+                    new_location = {"x":map_data.location.x+1, "y":map_data.location.y}
+                }
+                else if (map_data.y == 0) {
+                    new_location = {"x":map_data.location.x, "y":map_data.location.y-1}
+                }
+                else if (map_data.y == map_data.tiles[0][0].length-1) {
+                    new_location = {"x":map_data.location.x, "y":map_data.location.y+1}
+                }
+                if (new_location.x != map_data.location.x || new_location.y != map_data.location.y) {
+                    let request_json = {
+                        method:"post",
+                        body: JSON.stringify({
+                            "location_x":new_location.x,
+                            "location_y":new_location.y
+                        }),
+                        cache: "no-cache",
+                        headers: new Headers({
+                            "content-type": "application/json"
+                        })
+                    }
+                    // Separate function here because this code is largely duplicated
+                    fetch(
+                        "/mapgen", request_json
+                    )
+                    .then(response => response.json())
+                    .then(response => {
+                        // Clear out the old tiles
+                        let tiles = document.getElementById("map");
+                        while (tiles.firstChild) {
+                            tiles.removeChild(tiles.firstChild);
+                        }
+
+                        // Build the map in the map div.
+                        map_data.tiles = response.tiles;
+                        map_data.overlay = response.overlay;
+                        map_data.x = response.start_x;
+                        map_data.y = response.start_y;
+                        map_data.floor = response.floor;
+                        map_data.num_generations = "num_generations" in map_data ? map_data.num_generations+1 : 1;
+                        map_data.location = "location" in response ? response.location : {};
+                        map_data.navigation = "navigation" in response ? response.navigation : {};
+                        make_map();
+                        if (map_data.num_generations == 1) {
+                            add_navigation();
+                        }
+                    })
+                }
+            }
+        }
         // The whole map is remade to update the displayed position. Consider revising this.
         make_map();
         self.setInterval(repeated, 30);

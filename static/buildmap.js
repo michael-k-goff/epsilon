@@ -93,6 +93,8 @@ generate_map = (do_save) => {
         map_data.y = response.start_y;
         map_data.floor = response.floor;
         map_data.num_generations = "num_generations" in map_data ? map_data.num_generations+1 : 1;
+        map_data.location = "location" in response ? response.location : {};
+        map_data.navigation = "navigation" in response ? response.navigation : {};
         make_map();
         if (map_data.num_generations == 1) {
             add_navigation();

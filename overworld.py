@@ -2,6 +2,11 @@
 
 def build_map(req_data, app):
     # A bare-bones overworld to get started
+    location = {"x":0, "y":0}
+    if ("location_x" in req_data):
+        location["x"] = req_data["location_x"]
+    if ("location_y" in req_data):
+        location["y"] = req_data["location_y"]
     # The overworld is assumed to be 12X12 for now, with one floor.
     size_x = 12
     size_y = 12
@@ -26,4 +31,6 @@ def build_map(req_data, app):
     result["start_y"] = 5
     result["floor"] = 0
     result["tileset"] = "overworld"
+    result["location"] = location
+    result["navigation"] = {"offscreen":1}
     return result

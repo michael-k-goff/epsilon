@@ -25,8 +25,10 @@ def main_page():
 @app.route('/mapgen', methods=['POST'])
 def mapgen():
     req_data = request.get_json()
-    #return overworld.build_map(req_data, app)
-    return maze.build_maze3D(req_data, app)
+    if (req_data["map_type"] == "overworld"):
+        return overworld.build_map(req_data, app)
+    elif (req_data["map_type"] == "tower"):
+        return maze.build_maze3D(req_data, app)
 
 @app.route('/favicon.ico')
 def favicon():

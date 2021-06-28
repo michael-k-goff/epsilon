@@ -32,6 +32,8 @@ build_map = (request_json) => {
         map_data.num_generations = "num_generations" in map_data ? map_data.num_generations+1 : 1;
         map_data.location = "location" in response ? response.location : {};
         map_data.navigation = "navigation" in response ? response.navigation : {};
+        map_data.warps = "warps" in response ? response.warps : [];
+        map_data.map_type = "map_type" in response ? response.map_type : "";
         make_map();
         if (map_data.num_generations == 1) {
             add_navigation();
@@ -71,6 +73,9 @@ make_map = () => {
             if (overlay_type === "treasure") {
                 tile.appendChild(make_image_node("chest"));
             }
+            if (overlay_type === "tower") {
+                tile.appendChild(make_image_node("vgate_closed_up"));
+            }
             tile.setAttribute('class', 'tile '+tile_type+' '+overlay_type);
             tile_row.appendChild(tile);
         }
@@ -98,7 +103,8 @@ generate_map = (do_save) => {
         "do_save":do_save,
         "room_size":room_size,
         "corridor_preference":corridor_preference,
-        "shape":shape
+        "shape":shape,
+        "map_type":"overworld"
     })
 
     if (do_save) {

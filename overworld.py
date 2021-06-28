@@ -13,18 +13,22 @@ def build_map(req_data, app):
 
     start_x = 5
     start_y = 5
-    if "x" in req_data and "y" in req_data:
-        if req_data["x"] == 0:
+    if ("start_x" in req_data):
+        start_x = req_data["start_x"]
+    if ("start_y" in req_data):
+        start_y = req_data["start_y"]
+    if "navigation_x" in req_data and "navigation_y" in req_data:
+        if req_data["navigation_x"] == 0:
             start_x = size_x-2
-            start_y = req_data["y"]
-        elif req_data["x"] == size_x-1:
+            start_y = req_data["navigation_y"]
+        elif req_data["navigation_x"] == size_x-1:
             start_x = 1
-            start_y = req_data["y"]
-        elif req_data["y"] == 0:
-            start_x = req_data["x"]
+            start_y = req_data["navigation_y"]
+        elif req_data["navigation_y"] == 0:
+            start_x = req_data["navigation_x"]
             start_y = size_y-2
-        elif req_data["y"] == size_y-1:
-            start_x = req_data["x"]
+        elif req_data["navigation_y"] == size_y-1:
+            start_x = req_data["navigation_x"]
             start_y = 1
 
     maze = []
@@ -41,6 +45,7 @@ def build_map(req_data, app):
                 ['nothing' for j in range(size_x)]
             for i in range(size_y)]            
         )
+    overlay[0][3][3] = "tower"
 
     result = {"tiles":maze, "overlay":overlay}
     result["start_x"] = start_x
@@ -49,4 +54,6 @@ def build_map(req_data, app):
     result["tileset"] = "overworld"
     result["location"] = location
     result["navigation"] = {"offscreen":1}
+    result["warps"] = [{"x":3,"y":3,"z":0}] # Combine this with the navigation offscreen object eventually
+    result["map_type"] = "overworld"
     return result

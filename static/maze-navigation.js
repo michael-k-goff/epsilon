@@ -62,9 +62,9 @@ add_navigation = () => {
         else if (map_data.overlay[map_data.floor][target_position[0]][target_position[1]] == "stairs_down") {
             map_data.floor -= 1;
         }
+        let new_location = {"x":map_data.location.x, "y":map_data.location.y};
         if (map_data.navigation) {
             if (map_data.navigation.offscreen) {
-                let new_location = {"x":map_data.location.x, "y":map_data.location.y};
                 if (map_data.x == 0) {
                     new_location = {"x":map_data.location.x-1, "y":map_data.location.y}
                 }
@@ -81,10 +81,44 @@ add_navigation = () => {
                     let request_json = build_request_json({
                         "location_x":new_location.x,
                         "location_y":new_location.y,
-                        "x":map_data.x,
-                        "y":map_data.y
+                        "navigation_x":map_data.x,
+                        "navigation_y":map_data.y,
+                        "map_type":"overworld"
                     });
                     build_map(request_json);
+                }
+            }
+        }
+        if (map_data.warps) {
+            for (var i=0; i<map_data.warps.length; i++) {
+                if (map_data.warps[i].x == map_data.x && map_data.warps[i].y == map_data.y && map_data.warps[i].z == map_data.floor) {
+                    if (map_data.map_type == "overworld") {
+                        let request_json = build_request_json({
+                            "location_x":new_location.x,
+                            "location_y":new_location.y,
+                            "navigation_x":map_data.x,
+                            "navigation_y":map_data.y,
+                            "x":"5",
+                            "y":"5",
+                            "z":"3",
+                            "do_save":0,
+                            "room_size":"2",
+                            "corridor_preference":"none",
+                            "shape":"box",
+                            "map_type":"tower"
+                        })
+                        build_map(request_json);
+                    }
+                    else if (map_data.map_type == "tower") {
+                        let request_json = build_request_json({
+                            "location_x":new_location.x,
+                            "location_y":new_location.y,
+                            "start_x":3,
+                            "start_y":3,
+                            "map_type":"overworld"
+                        })
+                        build_map(request_json);
+                    }
                 }
             }
         }

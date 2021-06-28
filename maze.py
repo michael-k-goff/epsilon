@@ -431,7 +431,10 @@ def build_level3D(preferences):
     if (room_size > 1):
         treasure_x += 1
     overlay[treasure["z"]][treasure_x][treasure_y] = "treasure"
-    return {"maze":maze, "overlay":overlay, "start_point":start_point}
+    # Add an exit
+    maze[0][0][1] = "grass"
+    warps = [{"x":0,"y":1,"z":0}]
+    return {"maze":maze, "overlay":overlay, "start_point":start_point, "warps":warps}
 
 # Build the full maze, with multiple levels (if selected)
 def build_maze3D(req_data, app):
@@ -444,6 +447,9 @@ def build_maze3D(req_data, app):
     result["start_x"] = maze_data["start_point"]["x"]
     result["start_y"] = maze_data["start_point"]["y"]
     result["floor"] = maze_data["start_point"]["z"]
+    result["warps"] = maze_data["warps"]
+    result["location"] = {"x":req_data["location_x"],"y":req_data["location_y"]}
+    result["map_type"] = "tower"
     if (do_save):
         path = app.instance_path+"/saved_maps"
         map_filename = "map"+str(len(os.listdir(path)))+".json"

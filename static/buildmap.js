@@ -59,7 +59,7 @@ make_map = () => {
         tile_row.setAttribute('class', 'tile_row');
         for (let j=0; j<map_data.tiles[map_data.floor][i].length; j++) {
             let tile = document.createElement('div');
-            if (i === map_data.x && j === map_data.y) {
+            if (i === map_data.y && j === map_data.x) {
                 tile.innerHTML = "<span class='map-text'>?</span>";
             }
             tile_type = map_data.tiles[map_data.floor][i][j];

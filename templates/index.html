@@ -48,7 +48,7 @@
                     </div>
                     <select class="box-text" id="{{inp.field_name}}" name="{{inp.field_name}}">
                         {%- for i in range(inp.choices|length) %}
-                        {%- if choice == inp.default %}
+                        {%- if inp.choices[i] == inp.default %}
                         <option selected value="{{inp.choices[i]}}">{{inp.choice_names[i]}}</option>
                         {%- else %}
                         <option value="{{inp.choices[i]}}">{{inp.choice_names[i]}}</option>

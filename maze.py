@@ -1,6 +1,8 @@
 import random
 import os
 
+from werkzeug.datastructures import is_immutable
+
 # Meant to be the general node class for a cell in the grid.
 class Node:
     def __init__(self, *args):
@@ -74,20 +76,20 @@ def box(x,y,z,m,n,zz):
     return True
 
 def taper(x,y,z,m,n,zz):
-    distance_from_edge = min(x,y,m-1-x,n-1-y)
+    distance_from_edge = min(x,y,m-1-y,n-1-x)
     max_cutoff = min((m-1)//2, (n-1)//2)
     return distance_from_edge >= max_cutoff * z/(zz-1)
 
 def round(x,y,z,m,n,zz):
-    return (m//2-x)**2/(m//2)**2 + (n//2-y)**2/(n//2)**2 <= 1
+    return (m//2-y)**2/(m//2)**2 + (n//2-x)**2/(n//2)**2 <= 1
 
 def get_starting_point(preferences):
     if (preferences["shape"]=="box"):
-        return {"x":0, "y":0, "z":0}
+        return {"x":preferences["n"]//2, "y":preferences["m"]-1, "z":0}
     if (preferences["shape"]=="taper"):
-        return {"x":0, "y":0, "z":0}
+        return {"x":preferences["n"]//2, "y":preferences["m"]-1, "z":0}
     if (preferences["shape"]=="round"):
-        return {"x":preferences["m"]-1, "y":preferences["n"]//2, "z":0}
+        return {"x":preferences["n"]//2, "y":preferences["m"]-1, "z":0}
     return {"x":0,"y":0,"z":0} # Shouldn't hit this line.
 
 # A non-rectangular 3D grid.
@@ -101,7 +103,7 @@ class GeneralGrid3D(DungeonGraph):
         self.edge_dict = {} # A dictionary that makes it easy to look up edges by x,y,z coordinates
         self.nodes = []
         for i in range(m*n*zz):
-            x,y,z = i//(n*zz),(i%(n*zz))//zz, i%zz
+            y,x,z = i//(n*zz),(i%(n*zz))//zz, i%zz
             if (self.node_present(x,y,z,m,n,zz)):
                 self.num_nodes += 1
                 self.nodes.append(Cell3D(x,y,z))
@@ -112,7 +114,7 @@ class GeneralGrid3D(DungeonGraph):
         self.start_point = start_point
         self.start_vertex_num = self.edge_dict[node_string]
     def node_present(self,x,y,z, m, n, zz):
-        if (x<0 or x>=m or y<0 or y>=n or z<0 or z>=zz):
+        if (x<0 or x>=n or y<0 or y>=m or z<0 or z>=zz):
             return False
         return self.node_function(x,y,z,m,n,zz)
     def initedges(self, *args):
@@ -362,19 +364,20 @@ def build_level3D(preferences):
     overlay = []
     start_point = {
         "x":g.start_point["x"]*(room_size+1),
-        "y":g.start_point["y"]*(room_size+1),
+        "y":g.start_point["y"]*(room_size+1)+1,
         "z":g.start_point["z"]
     }
     for i in range(max_floor):
+        vertical_size = (room_size+1)*m
         maze.append(
             [
                 ['outside' for j in range((room_size+1)*n-1)]
-            for i in range((room_size+1)*m-1)]            
+            for i in range(vertical_size)]
         )
         overlay.append(
             [
                 ['nothing' for j in range((room_size+1)*n-1)]
-            for i in range((room_size+1)*m-1)]            
+            for i in range(vertical_size)]            
         )
 
     for i in range(m):
@@ -382,7 +385,7 @@ def build_level3D(preferences):
             for ii in range(room_size):
                 for jj in range(room_size):
                     for k in range(max_floor):
-                        if (g.node_present(i,j,k,m,n,max_floor)):
+                        if (g.node_present(j,i,k,m,n,max_floor)):
                             maze[k][(room_size+1)*i+ii][(room_size+1)*j+jj] = 'floor'
                         else:
                             maze[k][(room_size+1)*i+ii][(room_size+1)*j+jj] = 'outside'
@@ -395,51 +398,59 @@ def build_level3D(preferences):
             offset = (min(node1.z, node2.z)%2)*(room_size-1)
             if node1.x == node2.x and node1.y != node2.y:
                 for j in range(room_size):
-                    maze[node1.z][(room_size+1)*node1.x+j][(room_size+1)*max(node1.y,node2.y)-1] = 'floor'
+                    maze[node1.z][(room_size+1)*max(node1.y,node2.y)-1][(room_size+1)*node1.x+j] = 'floor'
             elif node1.y == node2.y and node1.x != node2.x:
                 for j in range(room_size):
-                    maze[node1.z][(room_size+1)*max(node1.x,node2.x)-1][(room_size+1)*node1.y+j] = 'floor'
+                    maze[node1.z][(room_size+1)*node1.y+j][(room_size+1)*max(node1.x,node2.x)-1] = 'floor'
             elif node2.z > node1.z:
-                maze[node1.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = 'floor'
-                maze[node2.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = 'floor'
-                overlay[node1.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_up"
-                overlay[node2.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_down"
+                maze[node1.z][(room_size+1)*node1.y+offset][(room_size+1)*node1.x+offset] = 'floor'
+                maze[node2.z][(room_size+1)*node1.y+offset][(room_size+1)*node1.x+offset] = 'floor'
+                overlay[node1.z][(room_size+1)*node1.y+offset][(room_size+1)*node1.x+offset] = "stairs_up"
+                overlay[node2.z][(room_size+1)*node1.y+offset][(room_size+1)*node1.x+offset] = "stairs_down"
             elif node2.z < node1.z:
-                maze[node1.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = 'floor'
-                maze[node2.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = 'floor'
-                overlay[node1.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_down"
-                overlay[node2.z][(room_size+1)*node1.x+offset][(room_size+1)*node1.y+offset] = "stairs_up"
+                maze[node1.z][(room_size+1)*node1.y+offset][(room_size+1)*node1.x+offset] = 'floor'
+                maze[node2.z][(room_size+1)*node1.y+offset][(room_size+1)*node1.x+offset] = 'floor'
+                overlay[node1.z][(room_size+1)*node1.y+offset][(room_size+1)*node1.x+offset] = "stairs_down"
+                overlay[node2.z][(room_size+1)*node1.y+offset][(room_size+1)*node1.x+offset] = "stairs_up"
         else:
             node1 = g.nodes[g.edges[i].start]
             node2 = g.nodes[g.edges[i].end]
             if node1.x == node2.x and node1.y != node2.y:
                 for j in range(room_size):
-                    maze[node1.z][(room_size+1)*node1.x+j][(room_size+1)*max(node1.y,node2.y)-1] = 'wall'
+                    maze[node1.z][(room_size+1)*max(node1.y,node2.y)-1][(room_size+1)*node1.x+j] = 'wall'
             elif node1.y == node2.y and node1.x != node2.x:
                 for j in range(room_size):
-                    maze[node1.z][(room_size+1)*max(node1.x,node2.x)-1][(room_size+1)*node1.y+j] = 'wall'
+                    maze[node1.z][(room_size+1)*node1.y+j][(room_size+1)*max(node1.x,node2.x)-1] = 'wall'
 
     # Make the corners walls if necessary
     for i in range(m-1):
         for j in range(n-1):
             for k in range(max_floor):
-                if g.node_present(i,j,k,m,n,max_floor) and g.node_present(i+1,j,k,m,n,max_floor) and g.node_present(i,j+1,k,m,n,max_floor) and g.node_present(i+1,j+1,k,m,n,max_floor):
+                if g.node_present(j,i,k,m,n,max_floor) and g.node_present(j,i+1,k,m,n,max_floor) and g.node_present(j+1,i,k,m,n,max_floor) and g.node_present(j+1,i+1,k,m,n,max_floor):
                     maze[k][(room_size+1)*(i+1)-1][(room_size+1)*(j+1)-1] = 'wall'
+    
+    # Set the bottom of the tower to be an exit. Probably to be made more general later
+    warps = []
+    for i in range(len(maze[0][0])):
+        if preferences["shape"] != "round":
+            maze[0][len(maze[0])-1][i] = 'wall'
+    for i in range(room_size):
+        maze[0][len(maze[0])-1][i+(room_size+1)*g.start_point["x"]] = 'grass'
+        warps.append({"x":i+(room_size+1)*g.start_point["x"],"y":len(maze[0])-1,"z":0})
     
     treasure_x = (room_size+1)*treasure["x"]
     treasure_y = (room_size+1)*treasure["y"]
     if (room_size > 1):
         treasure_x += 1
-    overlay[treasure["z"]][treasure_x][treasure_y] = "treasure"
-    # Add an exit
-    maze[0][0][1] = "grass"
-    warps = [{"x":0,"y":1,"z":0}]
+    overlay[treasure["z"]][treasure_y][treasure_x] = "treasure"
     return {"maze":maze, "overlay":overlay, "start_point":start_point, "warps":warps}
 
 # Build the full maze, with multiple levels (if selected)
 def build_maze3D(req_data, app):
     preferences = validate_input(req_data)
     do_save = preferences["do_save"]
+    seed_string = str(req_data["location_x"])+"-"+str(req_data["location_y"])
+    random.seed(seed_string)
     maze_data = build_level3D(preferences)
     
     # Process results

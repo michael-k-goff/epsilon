@@ -30,22 +30,22 @@ add_navigation = () => {
             }        
         }
         // Go through the four arrows
-        if (key_status["ArrowUp"]) {
+        if (key_status["ArrowLeft"]) {
             target_position[0] = Math.max(0, map_data.x-1);
         }
-        else if (key_status["ArrowDown"]) {
-            target_position[0] = Math.min(map_data.tiles[map_data.floor].length-1, map_data.x+1);
+        else if (key_status["ArrowRight"]) {
+            target_position[0] = Math.min(map_data.tiles[map_data.floor][map_data.y].length-1, map_data.x+1);
         }
-        else if (key_status["ArrowLeft"]) {
+        else if (key_status["ArrowUp"]) {
             target_position[1] = Math.max(0, map_data.y-1);
         }
-        else if (key_status["ArrowRight"]) {
-            target_position[1] = Math.min(map_data.tiles[map_data.floor][map_data.x].length-1, map_data.y+1);
+        else if (key_status["ArrowDown"]) {
+            target_position[1] = Math.min(map_data.tiles[map_data.floor].length-1, map_data.y+1);
         }
         if (map_data.x === target_position[0] && map_data.y === target_position[1]) {
             return;
         }
-        target_file = map_data.tiles[map_data.floor][target_position[0]][target_position[1]]
+        target_file = map_data.tiles[map_data.floor][target_position[1]][target_position[0]]
         if (["floor","stairs_up","stairs_down","grass"].includes(target_file)) {
             map_data.x = target_position[0];
             map_data.y = target_position[1];
@@ -56,10 +56,10 @@ add_navigation = () => {
         }
 
         // Proces stairs
-        if (map_data.overlay[map_data.floor][target_position[0]][target_position[1]] == "stairs_up") {
+        if (map_data.overlay[map_data.floor][target_position[1]][target_position[0]] == "stairs_up") {
             map_data.floor += 1;
         }
-        else if (map_data.overlay[map_data.floor][target_position[0]][target_position[1]] == "stairs_down") {
+        else if (map_data.overlay[map_data.floor][target_position[1]][target_position[0]] == "stairs_down") {
             map_data.floor -= 1;
         }
         let new_location = {"x":map_data.location.x, "y":map_data.location.y};
@@ -89,23 +89,33 @@ add_navigation = () => {
                 }
             }
         }
+
+        // Process warps
         if (map_data.warps) {
             for (var i=0; i<map_data.warps.length; i++) {
                 if (map_data.warps[i].x == map_data.x && map_data.warps[i].y == map_data.y && map_data.warps[i].z == map_data.floor) {
+                    let x = document.getElementById('x').value;
+                    let y = document.getElementById('y').value;
+                    let z = document.getElementById('z').value;
+                    let room_size = document.getElementById('room_size').value;
+                    let corridor_preference = document.getElementById('corridor_preference').value;
+                    let shape = document.getElementById('dungeon_shape').value;
+
                     if (map_data.map_type == "overworld") {
                         let request_json = build_request_json({
                             "location_x":new_location.x,
                             "location_y":new_location.y,
                             "navigation_x":map_data.x,
                             "navigation_y":map_data.y,
-                            "x":"5",
-                            "y":"5",
-                            "z":"3",
+
+                            "x":x,
+                            "y":y,
+                            "z":z,
                             "do_save":0,
-                            "room_size":"2",
-                            "corridor_preference":"none",
-                            "shape":"box",
-                            "map_type":"tower"
+                            "room_size":room_size,
+                            "corridor_preference":corridor_preference,
+                            "shape":shape,
+                            "map_type":"tower",
                         })
                         build_map(request_json);
                     }

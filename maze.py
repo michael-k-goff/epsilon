@@ -351,7 +351,7 @@ def validate_input(req_data):
 # Build a full 3D maze
 def build_level3D(preferences):
     g = PartialGrid3D(preferences)
-    g.set_distance()
+    g.set_distance() # Initialize distances to start for determining where the treasure should be.
     for i in range(g.num_nodes-1):
         g.assign_edge(g.edge_sample())
     treasure = g.get_treasure()

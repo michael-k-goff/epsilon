@@ -1,4 +1,21 @@
+import random
+
 # Overworld maps
+
+def get_1_1_height(x,y):
+    seed_string = str(x)+"-"+str(y)
+    random.seed(seed_string)
+    is_continent = 0
+    if random.uniform(0.,1.) < 0.6:
+        is_continent = 1
+    if is_continent:
+        return random.uniform(-3,3)
+    return 0
+
+def get_terrain(h):
+    if h <= 0:
+        return 'water'
+    return 'grass'
 
 def build_map(req_data, app):
     # A bare-bones overworld to get started
@@ -31,14 +48,21 @@ def build_map(req_data, app):
             start_x = req_data["navigation_x"]
             start_y = 1
 
+    height_map = []
     maze = []
     overlay = []
 
     for i in range(1):
+        height_map.append(
+            [
+                [get_1_1_height(location["x"]*size_x+j,location["y"]*size_y+i) for j in range(size_x)]
+                for i in range(size_y)
+            ]
+        )
         maze.append(
             [
-                ['grass' for j in range(size_x)]
-            for i in range(size_y)]            
+                [get_terrain(height_map[0][i][j]) for j in range(size_x)]
+            for i in range(size_y)]
         )
         overlay.append(
             [

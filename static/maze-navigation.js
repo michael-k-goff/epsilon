@@ -46,7 +46,8 @@ add_navigation = () => {
             return;
         }
         target_file = map_data.tiles[map_data.floor][target_position[1]][target_position[0]]
-        if (["floor","stairs_up","stairs_down","grass"].includes(target_file)) {
+        // Can walk on water for now for the sake of easy map exploration
+        if (["floor","stairs_up","stairs_down","grass","water"].includes(target_file)) {
             map_data.x = target_position[0];
             map_data.y = target_position[1];
             navigation_data["time_since_last_move"] = 150;

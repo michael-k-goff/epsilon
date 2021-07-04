@@ -1,6 +1,19 @@
 import random
+import math
 
 # Overworld maps
+
+def get_n_n_height(x,y,n):
+    xn = n*math.floor(x/n)
+    yn = n*math.floor(y/n)
+    seed_string = str(xn)+"-"+str(yn)
+    random.seed(seed_string)
+    is_continent = 0
+    if random.uniform(0.,1.) < 0.6:
+        is_continent = 1
+    if is_continent:
+        return random.uniform(-3,3)
+    return 0
 
 def get_1_1_height(x,y):
     seed_string = str(x)+"-"+str(y)
@@ -55,10 +68,14 @@ def build_map(req_data, app):
     for i in range(1):
         height_map.append(
             [
-                [get_1_1_height(location["x"]*size_x+j,location["y"]*size_y+i) for j in range(size_x)]
+                [0 for j in range(size_x)]
                 for i in range(size_y)
             ]
         )
+        for k in range(size_y):
+            for j in range(size_x):
+                height = sum([get_n_n_height(location["x"]*size_x+j,location["y"]*size_y+k,2**exp) for exp in range(10)])
+                height_map[0][k][j] = height
         maze.append(
             [
                 [get_terrain(height_map[0][i][j]) for j in range(size_x)]

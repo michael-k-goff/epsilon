@@ -3,6 +3,25 @@ import math
 
 # Overworld maps
 
+# Similar to the square below, but restricted to a circle inscribed within that square.
+def get_n_n_circle(x,y,n):
+    xn = n*math.floor(x/n)
+    yn = n*math.floor(y/n)
+    seed_string = str(xn)+"-"+str(yn)
+    random.seed(seed_string)
+    is_continent = 0
+    if random.uniform(0.,1.) < 0.6:
+        x_res = x-xn
+        y_res = y-yn
+        in_circle = (x_res-n/2)**2+(y_res-n/2)**2 < n**2/4
+        if in_circle:
+            is_continent = 1
+    if is_continent:
+        return random.uniform(-3,3)
+    return 0
+
+# Determine a continent or ocean.
+# All continents or oceans generated are on squares (in,in+n-1) X (jn,jn+n-1) of uniform height.
 def get_n_n_height(x,y,n):
     xn = n*math.floor(x/n)
     yn = n*math.floor(y/n)
@@ -15,6 +34,7 @@ def get_n_n_height(x,y,n):
         return random.uniform(-3,3)
     return 0
 
+# Same as nXn height above, except n=1.
 def get_1_1_height(x,y):
     seed_string = str(x)+"-"+str(y)
     random.seed(seed_string)
@@ -74,7 +94,8 @@ def build_map(req_data, app):
         )
         for k in range(size_y):
             for j in range(size_x):
-                height = sum([get_n_n_height(location["x"]*size_x+j,location["y"]*size_y+k,2**exp) for exp in range(10)])
+                height = sum([get_n_n_height(location["x"]*size_x+j,location["y"]*size_y+k,2**exp) for exp in range(1)])
+                height += sum([get_n_n_circle(location["x"]*size_x+j,location["y"]*size_y+k,2**exp) for exp in range(2,10)])
                 height_map[0][k][j] = height
         maze.append(
             [

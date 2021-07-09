@@ -28,9 +28,7 @@ def generate_template():
                 "default":"3",
                 "field_name":"z",
                 "text_name":"Number of Floors"
-            }
-        ],
-        [
+            },
             {
                 "type":"box_text",
                 "field_name":"dungeon_shape",
@@ -56,6 +54,16 @@ def generate_template():
                 "type":"button",
                 "name":"Save Map",
                 "action":"generate_map(1)"
+            }
+        ],
+        [
+            {
+                "type":"box_text",
+                "field_name":"overworld_preference",
+                "text_name":"World Map Style",
+                "default":"cont",
+                "choices":["arch","cont"],
+                "choice_names":["Archipelago","Continent"]
             }
         ]
     ]

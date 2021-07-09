@@ -1,5 +1,9 @@
 import random
 import math
+import json
+
+with open("continents.json", "r") as read_file:
+    continents = json.load(read_file)
 
 # Overworld maps
 
@@ -50,13 +54,78 @@ def get_terrain(h):
         return 'water'
     return 'grass'
 
+def build_screen_arch(x,y):
+    size_x = 12
+    size_y = 12
+
+    height_map = []
+    maze = []
+    overlay = []
+
+    for i in range(1):
+        height_map.append(
+            [
+                [0 for j in range(size_x)]
+                for i in range(size_y)
+            ]
+        )
+        for k in range(size_y):
+            for j in range(size_x):
+                height = sum([get_n_n_height(x*size_x+j,y*size_y+k,2**exp) for exp in range(1)])
+                height += sum([get_n_n_circle(x*size_x+j,y*size_y+k,2**exp) for exp in range(2,10)])
+                height_map[0][k][j] = height
+        maze.append(
+            [
+                [get_terrain(height_map[0][i][j]) for j in range(size_x)]
+            for i in range(size_y)]
+        )
+        overlay.append(
+            [
+                ['nothing' for j in range(size_x)]
+            for i in range(size_y)]            
+        )
+    overlay[0][3][3] = "tower"
+    return maze, overlay
+
+def build_screen_cont(x,y):
+    size_x = 12
+    size_y = 12
+
+    maze = []
+    overlay = []
+
+    for i in range(1):
+        maze.append(
+            [
+                ["water" for j in range(size_x)]
+                for i in range(size_y)
+            ]
+        )
+        # Turn water tiles to grass if they are in the continent
+        continent = continents[0]
+        for i in range(len(continent)):
+            panel_x = continent[i][0] - size_x*x
+            panel_y = continent[i][2] - size_y*y
+            if (panel_x >= 0 and panel_x < size_x and panel_y >= 0 and panel_y < size_y):
+                maze[0][panel_y][panel_x] = "grass"
+        overlay.append(
+            [
+                ['nothing' for j in range(size_x)]
+            for i in range(size_y)]            
+        )
+    overlay[0][3][3] = "tower"
+    return maze, overlay
+
 def build_map(req_data, app):
     # A bare-bones overworld to get started
     location = {"x":0, "y":0}
+    overworld_preference = "arch" # Default
     if ("location_x" in req_data):
         location["x"] = req_data["location_x"]
     if ("location_y" in req_data):
         location["y"] = req_data["location_y"]
+    if ("overworld_preference" in req_data):
+        overworld_preference = req_data["overworld_preference"]
     # The overworld is assumed to be 12X12 for now, with one floor.
     size_x = 12
     size_y = 12
@@ -81,33 +150,11 @@ def build_map(req_data, app):
             start_x = req_data["navigation_x"]
             start_y = 1
 
-    height_map = []
-    maze = []
-    overlay = []
-
-    for i in range(1):
-        height_map.append(
-            [
-                [0 for j in range(size_x)]
-                for i in range(size_y)
-            ]
-        )
-        for k in range(size_y):
-            for j in range(size_x):
-                height = sum([get_n_n_height(location["x"]*size_x+j,location["y"]*size_y+k,2**exp) for exp in range(1)])
-                height += sum([get_n_n_circle(location["x"]*size_x+j,location["y"]*size_y+k,2**exp) for exp in range(2,10)])
-                height_map[0][k][j] = height
-        maze.append(
-            [
-                [get_terrain(height_map[0][i][j]) for j in range(size_x)]
-            for i in range(size_y)]
-        )
-        overlay.append(
-            [
-                ['nothing' for j in range(size_x)]
-            for i in range(size_y)]            
-        )
-    overlay[0][3][3] = "tower"
+    maze, overlay = [], []
+    if overworld_preference == "arch":
+        maze, overlay = build_screen_arch(location["x"],location["y"])
+    else:
+        maze, overlay = build_screen_cont(location["x"],location["y"])
 
     result = {"tiles":maze, "overlay":overlay}
     result["start_x"] = start_x

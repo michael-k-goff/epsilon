@@ -95,6 +95,7 @@ generate_map = (do_save) => {
     let room_size = document.getElementById('room_size').value;
     let corridor_preference = document.getElementById('corridor_preference').value;
     let shape = document.getElementById('dungeon_shape').value;
+    let overworld_preference = document.getElementById('overworld_preference').value;
     
     let request_json = build_request_json({
         "x":x,
@@ -104,6 +105,7 @@ generate_map = (do_save) => {
         "room_size":room_size,
         "corridor_preference":corridor_preference,
         "shape":shape,
+        'overworld_preference':overworld_preference,
         "map_type":"overworld"
     })
 

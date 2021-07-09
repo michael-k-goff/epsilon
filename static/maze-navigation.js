@@ -79,12 +79,14 @@ add_navigation = () => {
                     new_location = {"x":map_data.location.x, "y":map_data.location.y+1}
                 }
                 if (new_location.x != map_data.location.x || new_location.y != map_data.location.y) {
+                    let overworld_preference = document.getElementById('overworld_preference').value;
                     let request_json = build_request_json({
                         "location_x":new_location.x,
                         "location_y":new_location.y,
                         "navigation_x":map_data.x,
                         "navigation_y":map_data.y,
-                        "map_type":"overworld"
+                        "map_type":"overworld",
+                        "overworld_preference":overworld_preference
                     });
                     build_map(request_json);
                 }
@@ -94,6 +96,7 @@ add_navigation = () => {
         // Process warps
         if (map_data.warps) {
             for (var i=0; i<map_data.warps.length; i++) {
+                let overworld_preference = document.getElementById('overworld_preference').value;
                 if (map_data.warps[i].x == map_data.x && map_data.warps[i].y == map_data.y && map_data.warps[i].z == map_data.floor) {
                     let x = document.getElementById('x').value;
                     let y = document.getElementById('y').value;
@@ -126,7 +129,8 @@ add_navigation = () => {
                             "location_y":new_location.y,
                             "start_x":3,
                             "start_y":3,
-                            "map_type":"overworld"
+                            "map_type":"overworld",
+                            "overworld_preference":overworld_preference
                         })
                         build_map(request_json);
                     }

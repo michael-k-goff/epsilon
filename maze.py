@@ -342,7 +342,7 @@ def validate_input(req_data):
         "m":m,
         "n":n,
         "z":z,
-        "do_save":req_data["do_save"],
+        "do_save":req_data["do_save"] if "do_save" in req_data else 0,
         "room_size":req_data["room_size"],
         "corridor_preference":req_data["corridor_preference"],
         "shape":req_data["dungeon_shape"]
@@ -436,7 +436,12 @@ def build_level3D(preferences):
             maze[0][len(maze[0])-1][i] = 'wall'
     for i in range(room_size):
         maze[0][len(maze[0])-1][i+(room_size+1)*g.start_point["x"]] = 'grass'
-        warps.append({"x":i+(room_size+1)*g.start_point["x"],"y":len(maze[0])-1,"z":0})
+        warps.append({
+            "x":i+(room_size+1)*g.start_point["x"],
+            "y":len(maze[0])-1,
+            "z":0,
+            "dest":{"type":"overworld","x":3,"y":3}
+        })
     
     treasure_x = (room_size+1)*treasure["x"]
     treasure_y = (room_size+1)*treasure["y"]

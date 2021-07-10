@@ -163,6 +163,6 @@ def build_map(req_data, app):
     result["tileset"] = "overworld"
     result["location"] = location
     result["navigation"] = {"offscreen":1}
-    result["warps"] = [{"x":3,"y":3,"z":0}] # Combine this with the navigation offscreen object eventually
+    result["warps"] = [{"x":3,"y":3,"z":0,"dest":{"type":"tower"}}] # Combine this with the navigation offscreen object eventually
     result["map_type"] = "overworld"
     return result

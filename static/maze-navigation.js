@@ -96,28 +96,16 @@ add_navigation = () => {
             for (var i=0; i<map_data.warps.length; i++) {
                 let overworld_preference = document.getElementById('overworld_preference').value;
                 if (map_data.warps[i].x == map_data.x && map_data.warps[i].y == map_data.y && map_data.warps[i].z == map_data.floor) {
-                    if (map_data.map_type == "overworld") {
-                        let request_json = build_request_json({
-                            "location_x":new_location.x,
-                            "location_y":new_location.y,
-                            "navigation_x":map_data.x,
-                            "navigation_y":map_data.y,
-                            "do_save":0,
-                            "map_type":"tower",
-                        })
-                        build_map(request_json);
-                    }
-                    else if (map_data.map_type == "tower") {
-                        let request_json = build_request_json({
-                            "location_x":new_location.x,
-                            "location_y":new_location.y,
-                            "start_x":3,
-                            "start_y":3,
-                            "map_type":"overworld",
-                            "overworld_preference":overworld_preference
-                        })
-                        build_map(request_json);
-                    }
+                    let request_json = build_request_json({
+                        "location_x":new_location.x,
+                        "location_y":new_location.y,
+                        "navigation_x":map_data.x,
+                        "navigation_y":map_data.y,
+                        "start_x":("x" in map_data.warps[i]) ? map_data.warps[i].dest["x"] : 0,
+                        "start_y":("y" in map_data.warps[i]) ? map_data.warps[i].dest["y"] : 0,
+                        "map_type":map_data.warps[i].dest["type"]
+                    })
+                    build_map(request_json);
                 }
             }
         }

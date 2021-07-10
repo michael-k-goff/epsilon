@@ -87,7 +87,7 @@ def build_screen_arch(x,y):
     overlay[0][3][3] = "tower"
     return maze, overlay
 
-def build_screen_cont(x,y):
+def build_screen_cont(x,y,cont_num):
     size_x = 12
     size_y = 12
 
@@ -102,7 +102,7 @@ def build_screen_cont(x,y):
             ]
         )
         # Turn water tiles to grass if they are in the continent
-        continent = continents[0]
+        continent = continents[cont_num]
         for i in range(len(continent)):
             panel_x = continent[i][0] - size_x*x
             panel_y = continent[i][2] - size_y*y
@@ -154,7 +154,7 @@ def build_map(req_data, app):
     if overworld_preference == "arch":
         maze, overlay = build_screen_arch(location["x"],location["y"])
     else:
-        maze, overlay = build_screen_cont(location["x"],location["y"])
+        maze, overlay = build_screen_cont(location["x"],location["y"],int(req_data["cont_num"]))
 
     result = {"tiles":maze, "overlay":overlay}
     result["start_x"] = start_x

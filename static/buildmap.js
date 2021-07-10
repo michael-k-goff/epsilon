@@ -1,9 +1,20 @@
 map_data = {};
 
 build_request_json = (input_dict) => {
+    let request_object = {};
+    mf = document.getElementById("main-form");
+    for (let i=0; i<mf.length; i++) {
+        let value = mf[i].id;
+        if (value.length > 0) {
+            request_object[value] = document.getElementById(value)["value"];
+        }
+    }
+    for (let key in input_dict) {
+        request_object[key] = input_dict[key];
+    }
     return {
         method:"post",
-        body: JSON.stringify(input_dict),
+        body: JSON.stringify(request_object),
         cache: "no-cache",
         headers: new Headers({
             "content-type": "application/json"
@@ -89,23 +100,8 @@ generate_map = (do_save) => {
         return;
     }
 
-    let x = document.getElementById('x').value;
-    let y = document.getElementById('y').value;
-    let z = document.getElementById('z').value;
-    let room_size = document.getElementById('room_size').value;
-    let corridor_preference = document.getElementById('corridor_preference').value;
-    let shape = document.getElementById('dungeon_shape').value;
-    let overworld_preference = document.getElementById('overworld_preference').value;
-    
     let request_json = build_request_json({
-        "x":x,
-        "y":y,
-        "z":z,
         "do_save":do_save,
-        "room_size":room_size,
-        "corridor_preference":corridor_preference,
-        "shape":shape,
-        'overworld_preference':overworld_preference,
         "map_type":"overworld"
     })
 

@@ -64,6 +64,14 @@ def generate_template():
                 "default":"cont",
                 "choices":["arch","cont"],
                 "choice_names":["Archipelago","Continent"]
+            },
+            {
+                "type":"box",
+                "field_name":"cont_num",
+                "text_name":"Continent Number",
+                "default":"0",
+                "choices":["0","1","2","3","4","5","6","7","8","9"],
+                "choice_names":["0","1","2","3","4","5","6","7","8","9"]
             }
         ]
     ]

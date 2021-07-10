@@ -345,7 +345,7 @@ def validate_input(req_data):
         "do_save":req_data["do_save"],
         "room_size":req_data["room_size"],
         "corridor_preference":req_data["corridor_preference"],
-        "shape":req_data["shape"]
+        "shape":req_data["dungeon_shape"]
     }
 
 # Build a full 3D maze
